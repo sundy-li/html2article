@@ -36,7 +36,7 @@
 - [Java实现][3]
 
 
-[1]: http://github.com/sundy-li/html2article/examples/from_url.go
+[1]: https://github.com/sundy-li/html2article/blob/master/examples/from_url.go
 [2]: http://cea.ceaj.org/CN/10.3778/j.issn.1002-8331.2010.20.001#
 [3]: https://github.com/CrawlScript/WebCollector
  
