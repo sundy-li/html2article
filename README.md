@@ -5,10 +5,11 @@
 
 
 ## Performance
-  (avg 3.2ms per article, accuracy >= 98%, 对比其他开源实现,可能是目前最快的html2article实现)
+  avg 3.2ms per article, accuracy >= 98% (对比其他开源实现,可能是目前最快的html2article实现,我们测试的数据集约3kw来自于微信公众号,各大类中文科技媒体历史文章,目前能达到98%以上准确率)
 
 
 ## Examples
+参考examples
 [from_url.go][1]
 
 	
