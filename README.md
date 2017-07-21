@@ -1,4 +1,4 @@
-## 基于文本密度的html2article文章提取[golang实现] 
+## 基于文本密度的html2article实现[golang] 
 
 ## Install
 	go get -u -v github.com/sundy-li/html2article
