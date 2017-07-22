@@ -38,6 +38,6 @@
 
 
 [1]: https://github.com/sundy-li/html2article/blob/master/examples/from_url.go
-[2]: http://cea.ceaj.org/CN/10.3778/j.issn.1002-8331.2010.20.001#
+[2]: http://www.doc88.com/p-7714009813182.html
 [3]: https://github.com/CrawlScript/WebCollector
  
