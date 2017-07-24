@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io/ioutil"
 	"net/http"
+	"regexp"
 	"strings"
 
 	"golang.org/x/text/encoding"
@@ -11,19 +12,20 @@ import (
 	"golang.org/x/text/transform"
 )
 
+var charsetRe = regexp.MustCompile(`<meta\s.*charset=(.*)>`)
+
 func DefCode(header http.Header, html string) string {
 	contentType := strings.ToLower(header.Get("Content-Type"))
 	if strings.Contains(contentType, "charset") {
 		return getCharset(contentType)
 	}
 	// 通过html判断
-	index := strings.Index(html, `charset=`)
-	if index < 0 || index+20 > len(html) {
-		return "utf-8"
+	matches := charsetRe.FindStringSubmatch(html)
+	if len(matches) > 1 {
+		return getCharset(strings.Trim(matches[1], `"`))
 	}
 
-	var str = html[index : index+20]
-	return getCharset(str)
+	return "utf-8"
 }
 
 func getCharset(contentType string) string {
