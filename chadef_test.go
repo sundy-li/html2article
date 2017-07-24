@@ -9,8 +9,8 @@ import (
 func TestDefCode(t *testing.T) {
 	assert := assert.New(t)
 
-	testCases := []struct{
-		in string	
+	testCases := []struct {
+		in       string
 		expected string
 	}{
 		// http://xiaozhenkai.blog.51cto.com/1029756/1949841
