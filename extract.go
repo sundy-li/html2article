@@ -74,6 +74,7 @@ func extract(doc *html.Node) (article *Article, err error) {
 	}
 	article = &Article{}
 	// Get the Content
+	article.contentNode = node
 	article.Content = getText(node)
 	article.Html, err = getHtml(node)
 	if err != nil {
@@ -149,10 +150,6 @@ func (ec *extractor) getInfo(node *html.Node) (info *Info) {
 func (ec *extractor) addNode(node *html.Node, info *Info) {
 	info.CalScore()
 	ec.data[info] = node
-	// cls := attr(node, "class")
-	// if cls == "bk3left" {
-	// 	fmt.Printf("%v\n", info)
-	// }
 }
 
 func (ec *extractor) getBestMatch() (node *html.Node, err error) {

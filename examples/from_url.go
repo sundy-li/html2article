@@ -5,7 +5,7 @@ import (
 )
 
 func main() {
-	article, err := html2article.FromUrl("https://www.leiphone.com/news/201602/DsiQtR6c1jCu7iwA.html")
+	article, err := html2article.FromUrl("http://edition.cnn.com/travel/article/airlines-cabin-waste/index.html")
 	if err != nil {
 		panic(err)
 	}

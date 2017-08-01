@@ -22,11 +22,13 @@ func TestExtract(t *testing.T) {
 		}
 		assert.Nil(err)
 		assert.Equal(int64(1455732300), article.Publishtime)
-		assert.Equal(3, len(article.Images))
 		assert.Equal("“朋友印象”被曝可以看到匿名者真实身份，还能否愉快地八卦？ | 雷锋网", article.Title)
 		assert.Contains(article.Content, "春节这几天")
 		assert.Contains(article.Html, "<p>")
 		assert.Contains(article.Html, "春节这几天")
+
+		article.Readable(urlStr)
+		assert.Contains(article.ReadContent, "春节这几天")
 	})
 }
 
