@@ -63,13 +63,12 @@ func (a *Article) ParseImage(urlStr string) {
 
 func (a *Article) clean(sel *html.Node, tags ...atom.Atom) {
 	for c := sel.FirstChild; c != nil; c = c.NextSibling {
+		a.clean(c, tags...)
 		for _, tag := range tags {
 			if isTag(tag)(c) {
 				pre := c.PrevSibling
 				sel.RemoveChild(c)
 				c = pre
-			} else {
-				a.clean(c, tags...)
 			}
 		}
 	}
