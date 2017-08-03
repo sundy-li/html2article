@@ -69,7 +69,11 @@ func (a *Article) clean(sel *html.Node, tags ...atom.Atom) {
 				pre := c.PrevSibling
 				sel.RemoveChild(c)
 				c = pre
+				break
 			}
+		}
+		if c == nil {
+			break
 		}
 	}
 }
