@@ -139,10 +139,13 @@ func getImages(node *html.Node) []string {
 				return false
 			}
 
-			// ithome
 			src := attr(n, "data-original")
+
 			if len(src) == 0 {
 				src = attr(n, "src")
+			} else {
+				setAttr(n, "src", src)
+				removeAttr(n, "data-src")
 			}
 
 			if len(src) == 0 {
@@ -261,4 +264,18 @@ func removeAttr(n *html.Node, attrName string) {
 			return
 		}
 	}
+}
+
+func setAttr(n *html.Node, attrName, value string) {
+	for i, a := range n.Attr {
+		if a.Key == attrName {
+			n.Attr[i].Val = value
+			return
+		}
+	}
+	if len(n.Attr) == 0 {
+		n.Attr = []html.Attribute{}
+	}
+	n.Attr[len(n.Attr)].Key = attrName
+	n.Attr[len(n.Attr)].Val = value
 }
