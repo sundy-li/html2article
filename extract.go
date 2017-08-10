@@ -12,58 +12,52 @@ import (
 )
 
 type extractor struct {
-	data map[*Info]*html.Node
+	data   map[*Info]*html.Node
+	urlStr string
+	doc    *html.Node
 }
 
-func NewExtractor() *extractor {
-	return &extractor{data: make(map[*Info]*html.Node)}
+func NewFromHtml(htmlStr string) (ext *extractor, err error) {
+	return NewFromReader(strings.NewReader(htmlStr))
+}
+
+func NewFromReader(reader io.Reader) (ext *extractor, err error) {
+	doc, err := html.Parse(reader)
+	if err != nil {
+		return
+	}
+	return NewFromNode(doc)
+}
+
+func NewFromNode(doc *html.Node) (ext *extractor, err error) {
+	ext = &extractor{data: make(map[*Info]*html.Node), doc: doc}
+	return
+}
+
+func NewFromUrl(urlStr string) (ext *extractor, err error) {
+	resp, err := http.Get(urlStr)
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+	bs, _ := ioutil.ReadAll(resp.Body)
+	htmlStr := string(bs)
+	htmlStr = DecodeHtml(resp.Header, htmlStr, htmlStr)
+	ext, err = NewFromHtml(htmlStr)
+	if err != nil {
+		return
+	}
+	ext.urlStr = urlStr
+	return
 }
 
 var (
 	ERROR_NOTFOUND = errors.New("Content not found")
 )
 
-// FromUrl do parse the urlStr html to  Article
-func FromUrl(urlStr string) (article *Article, err error) {
-	req, _ := http.NewRequest("GET", urlStr, nil)
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.98 Safari/537.36")
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return
-	}
-	defer resp.Body.Close()
-	bs, _ := ioutil.ReadAll(resp.Body)
-
-	htmlStr := string(bs)
-	htmlStr = DecodeHtml(resp.Header, htmlStr, htmlStr)
-	article, err = FromReader(strings.NewReader(htmlStr))
-	return
-}
-
-// FromHtml do parse the htmlStr to  Article
-func FromHtml(htmlStr string) (article *Article, err error) {
-	return FromReader(strings.NewReader(htmlStr))
-}
-
-// FromNode
-func FromNode(node *html.Node) (article *Article, err error) {
-	return extract(node)
-}
-
-// From Reader
-func FromReader(reader io.Reader) (article *Article, err error) {
-	doc, err := html.Parse(reader)
-	if err != nil {
-		return
-	}
-	return extract(doc)
-}
-
-func extract(doc *html.Node) (article *Article, err error) {
-	ec := NewExtractor()
-	body := find(doc, isTag(atom.Body))
+func (ec *extractor) ToArticle() (article *Article, err error) {
+	body := find(ec.doc, isTag(atom.Body))
 	ec.getInfo(body)
-
 	node, err := ec.getBestMatch()
 	if err != nil {
 		return
@@ -95,7 +89,7 @@ func extract(doc *html.Node) (article *Article, err error) {
 	if article.Publishtime == 0 {
 		article.Publishtime = getTime(article.Content)
 	}
-	titleNode := find(doc, isTag(atom.Title))
+	titleNode := find(ec.doc, isTag(atom.Title))
 	if titleNode != nil {
 		article.Title = getText(titleNode)
 	}
@@ -157,7 +151,6 @@ func (ec *extractor) getBestMatch() (node *html.Node, err error) {
 		err = ERROR_NOTFOUND
 		return
 	}
-
 	var maxScore float64 = -100
 	for kinfo, v := range ec.data {
 		//wechat

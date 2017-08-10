@@ -18,8 +18,12 @@ func main() {
 	defer resp.Body.Close()
 
 	bs, _ := ioutil.ReadAll(resp.Body)
-	article, err := html2article.FromHtml(string(bs))
 
+	ext, err := html2article.NewFromHtml(string(bs))
+	if err != nil {
+		panic(err)
+	}
+	article, err := ext.ToArticle()
 	if err != nil {
 		panic(err)
 	}

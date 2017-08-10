@@ -5,7 +5,12 @@ import (
 )
 
 func main() {
-	article, err := html2article.FromUrl("http://edition.cnn.com/travel/article/airlines-cabin-waste/index.html")
+	urlStr := "https://www.leiphone.com/news/201602/DsiQtR6c1jCu7iwA.html"
+	ext, err := html2article.NewFromUrl(urlStr)
+	if err != nil {
+		panic(err)
+	}
+	article, err := ext.ToArticle()
 	if err != nil {
 		panic(err)
 	}

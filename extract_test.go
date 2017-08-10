@@ -1,8 +1,6 @@
 package html2article
 
 import (
-	"bytes"
-	"io/ioutil"
 	"net/http"
 
 	"testing"
@@ -15,7 +13,8 @@ func TestExtract(t *testing.T) {
 		assert := assert.New(t)
 		urlStr := "https://www.leiphone.com/news/201602/DsiQtR6c1jCu7iwA.html"
 
-		article, err := FromUrl(urlStr)
+		ext, _ := NewFromUrl(urlStr)
+		article, err := ext.ToArticle()
 		if err != nil {
 			t.Fatal(err)
 			return
@@ -33,14 +32,18 @@ func TestExtract(t *testing.T) {
 }
 
 func BenchmarkExtract(b *testing.B) {
-	urlStr := "http://tech.qq.com/a/20161205/001738.htm"
+	urlStr := "https://www.leiphone.com/news/201602/DsiQtR6c1jCu7iwA.html"
 	resp, err := http.Get(urlStr)
 	if err != nil {
 		return
 	}
 	defer resp.Body.Close()
-	bs, _ := ioutil.ReadAll(resp.Body)
+
 	for i := 0; i < b.N; i++ {
-		FromReader(bytes.NewReader(bs))
+		ext, err := NewFromReader(resp.Body)
+		if err != nil {
+			b.Fatal(err.Error())
+		}
+		ext.ToArticle()
 	}
 }
