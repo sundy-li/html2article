@@ -61,6 +61,22 @@ func (a *Article) ParseImage(urlStr string) {
 	}
 }
 
+func (a *Article) Paragraphs() []string {
+	paras := []string{}
+	walk(a.contentNode, func(n *html.Node) bool {
+		if isTag(atom.P)(n) {
+			text := strings.TrimSpace(childText(n))
+			if text != "" {
+				paras = append(paras, text)
+			}
+			return false
+		} else {
+			return true
+		}
+	})
+	return paras
+}
+
 func (a *Article) clean(sel *html.Node, tags ...atom.Atom) {
 	for c := sel.FirstChild; c != nil; c = c.NextSibling {
 		a.clean(c, tags...)
