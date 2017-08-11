@@ -60,6 +60,9 @@ var (
 
 func (ec *extractor) ToArticle() (article *Article, err error) {
 	body := find(ec.doc, isTag(atom.Body))
+	if body == nil {
+		body = ec.doc
+	}
 	ec.getSn()
 	ec.getInfo(body)
 	node, err := ec.getBestMatch()
@@ -129,16 +132,26 @@ func (ec *extractor) getInfo(node *html.Node) (info *Info) {
 			info.LeafList = append(info.LeafList, cInfo.LeafList...)
 			info.Data += cInfo.Data
 			info.Pcount += cInfo.Pcount
+			info.ImageCount += cInfo.ImageCount
+			info.InputCount += cInfo.InputCount
 		}
 
 		info.TagCount++
 
-		if isTag(atom.A)(node) {
+		switch node.DataAtom {
+		case atom.A:
 			info.LinkTagCount++
-			info.LinkTextCount += len(info.Data)
-		} else if isTag(atom.P)(node) {
+			if node.Parent.DataAtom != atom.P {
+				info.LinkTextCount += len(info.Data)
+			}
+		case atom.P:
 			info.Pcount++
+		case atom.Img, atom.Image:
+			info.ImageCount++
+		case atom.Input, atom.Textarea, atom.Button:
+			info.InputCount++
 		}
+
 		if isContentNode(node) {
 			ec.addNode(node, info)
 		}
@@ -148,6 +161,7 @@ func (ec *extractor) getInfo(node *html.Node) (info *Info) {
 }
 
 func (ec *extractor) addNode(node *html.Node, info *Info) {
+	info.node = node
 	info.CalScore(ec.sn, ec.swn)
 	ec.data[info] = node
 }
@@ -168,12 +182,6 @@ func (ec *extractor) getBestMatch() (node *html.Node, err error) {
 			maxScore = kinfo.score
 			node = v
 		}
-		// if kinfo.score >= 0 {
-		// 	c := attr(v, "class")
-		// 	if strings.Contains(c, "article") {
-		// 		println("class:", c, kinfo.score, kinfo.Density, kinfo.getAvg(), kinfo.Pcount, kinfo.TextCount, kinfo.LinkTextCount)
-		// 	}
-		// }
 	}
 	if node == nil {
 		err = ERROR_NOTFOUND

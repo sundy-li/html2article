@@ -3,7 +3,6 @@ package html2article
 import (
 	"net/http"
 	"strings"
-
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -28,6 +27,20 @@ func TestToArticle(t *testing.T) {
 			{"https://www.leiphone.com/news/201707/RRiH46oUsrJSybq0.html", "lph-article-comView"},
 			{"https://www.leiphone.com/news/201708/UixD9DKRXaUTts1d.html", "lph-article-comView"},
 			{"https://www.leiphone.com/news/201703/OVX5oq3f5jR81wnr.html", "lph-article-comView"},
+			{"http://www.leiphone.com/news/201701/Tb4KueUFvTWNUPRb.html", "lph-article-comView"},
+			{"http://www.leiphone.com/news/201701/gFgzIMAQCaw82kkw.html", "lph-article-comView"},
+			{"http://www.leiphone.com/news/201701/rxHljWvlNxOzPKI5.html", "lph-article-comView"},
+			{"http://www.leiphone.com/news/201701/03pLjLLM8nbUgmMA.html", "lph-article-comView"},
+			{"http://www.leiphone.com/news/201701/JFYc1GmvsR3Taeqq.html", "lph-article-comView"},
+			{"http://www.leiphone.com/news/201703/Od6mC55tGNF0HtYZ.html", "lph-article-comView"},
+			{"http://www.leiphone.com/news/201608/om47X9OuSsTapSgp.html", "lph-article-comView"},
+			{"http://www.leiphone.com/news/201704/3tl33V96ZY8fbyGW.html", "lph-article-comView"},
+			{"http://www.leiphone.com/news/201702/ayGjmykd2NPtU0on.html", "lph-article-comView"},
+			{"http://www.leiphone.com/news/201703/Fk7yvXGixq3ioNwn.html", "lph-article-comView"},
+			{"http://www.leiphone.com/news/201703/FsCPnwVXvuF8ntVA.html", "lph-article-comView"},
+			{"http://www.leiphone.com/news/201704/4uJXa3clD8X7Ahbo.html", "lph-article-comView"},
+			{"http://www.leiphone.com/news/201610/Bo67kHXGUcXbDFAL.html", "lph-article-comView"},
+			{"http://www.leiphone.com/news/201702/XwhHugKHTk86WQso.html", "lph-article-comView"},
 		}
 
 		for _, testCase := range testCases {

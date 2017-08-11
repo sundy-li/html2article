@@ -86,3 +86,7 @@ func (a *Article) cleanStyle(sel *html.Node, attrs ...string) {
 		a.cleanStyle(c, attrs...)
 	}
 }
+
+func (a *Article) GetContentNode() *html.Node {
+	return a.contentNode
+}
