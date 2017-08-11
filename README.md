@@ -27,16 +27,17 @@
 
 	func main() {
 		urlStr := "https://www.leiphone.com/news/201602/DsiQtR6c1jCu7iwA.html"
-		article, err := html2article.FromUrl(urlStr)
+		ext, err := html2article.NewFromUrl(urlStr)
+		if err != nil {
+			panic(err)
+		}
+		article, err := ext.ToArticle()
 		if err != nil {
 			panic(err)
 		}
 		println("article title is =>", article.Title)
 		println("article publishtime is =>", article.Publishtime)
 		println("article content is =>", article.Content)
-
-		article.Readable(urlStr) // generate the article ReadContent,replace the images to be absolute path
-		println("article read content is =>", article.ReadContent)
 	}
 
 
