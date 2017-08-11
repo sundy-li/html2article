@@ -15,6 +15,9 @@ type extractor struct {
 	data   map[*Info]*html.Node
 	urlStr string
 	doc    *html.Node
+
+	sn  float64
+	swn float64
 }
 
 func NewFromHtml(htmlStr string) (ext *extractor, err error) {
@@ -57,6 +60,7 @@ var (
 
 func (ec *extractor) ToArticle() (article *Article, err error) {
 	body := find(ec.doc, isTag(atom.Body))
+	ec.getSn()
 	ec.getInfo(body)
 	node, err := ec.getBestMatch()
 	if err != nil {
@@ -97,6 +101,12 @@ func (ec *extractor) ToArticle() (article *Article, err error) {
 	return
 }
 
+func (ec *extractor) getSn() {
+	txt := text(ec.doc)
+	ec.swn = float64(countStopWords(txt))
+	ec.sn = float64(countSn(txt))
+}
+
 func (ec *extractor) getInfo(node *html.Node) (info *Info) {
 	info = NewInfo()
 	if node.Type == html.TextNode {
@@ -117,21 +127,17 @@ func (ec *extractor) getInfo(node *html.Node) (info *Info) {
 			info.TagCount += cInfo.TagCount
 			info.LinkTagCount += cInfo.LinkTagCount
 			info.LeafList = append(info.LeafList, cInfo.LeafList...)
-			info.DensitySum += cInfo.Density
 			info.Data += cInfo.Data
+			info.Pcount += cInfo.Pcount
 		}
 
 		info.TagCount++
 
 		if isTag(atom.A)(node) {
 			info.LinkTagCount++
+			info.LinkTextCount += len(info.Data)
 		} else if isTag(atom.P)(node) {
 			info.Pcount++
-		}
-		var9 := info.TextCount - info.LinkTextCount
-		var10 := info.TagCount - info.LinkTagCount
-		if var9*var10 != 0 {
-			info.Density = (float64(var9) / float64(var10))
 		}
 		if isContentNode(node) {
 			ec.addNode(node, info)
@@ -142,7 +148,7 @@ func (ec *extractor) getInfo(node *html.Node) (info *Info) {
 }
 
 func (ec *extractor) addNode(node *html.Node, info *Info) {
-	info.CalScore()
+	info.CalScore(ec.sn, ec.swn)
 	ec.data[info] = node
 }
 
@@ -153,20 +159,21 @@ func (ec *extractor) getBestMatch() (node *html.Node, err error) {
 	}
 	var maxScore float64 = -100
 	for kinfo, v := range ec.data {
-		//wechat
-		if cls := attr(v, "id"); cls == "js_content" {
-			node = v
-			return
-		}
-
-		//如果不含有标点符号,那么不算入正文
-		if !strings.Contains(kinfo.Data, "，") && !strings.Contains(kinfo.Data, ",") {
-			continue
-		}
+		// //wechat
+		// if cls := attr(v, "id"); cls == "js_content" {
+		// 	node = v
+		// 	return
+		// }
 		if kinfo.score >= maxScore {
 			maxScore = kinfo.score
 			node = v
 		}
+		// if kinfo.score >= 0 {
+		// 	c := attr(v, "class")
+		// 	if strings.Contains(c, "article") {
+		// 		println("class:", c, kinfo.score, kinfo.Density, kinfo.getAvg(), kinfo.Pcount, kinfo.TextCount, kinfo.LinkTextCount)
+		// 	}
+		// }
 	}
 	if node == nil {
 		err = ERROR_NOTFOUND

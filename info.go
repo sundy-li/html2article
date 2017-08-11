@@ -1,8 +1,6 @@
 package html2article
 
-import (
-	"math"
-)
+import "math"
 
 type Info struct {
 	TextCount     int
@@ -15,17 +13,32 @@ type Info struct {
 
 	Data string
 
-	score      float64
-	DensitySum float64
+	score float64
 }
 
 func NewInfo() *Info {
 	return &Info{}
 }
 
-func (info *Info) CalScore() {
+func (info *Info) CalScore(sn_sum, swn_sum float64) {
+	//ln((cn-lcn)/lcn) * (sn/snm + 1) * (swn/swnm + 1) * abs(ln((cn+1)/(tn+1))
+	a1 := info.TextCount - info.LinkTextCount
+	a2 := info.LinkTextCount
+
+	sn := countSn(info.Data)
+	swn := countStopWords(info.Data)
+
+	a3 := math.Abs(math.Log(float64(info.TextCount+1) / float64(info.TagCount+1)))
+	if a1 == 0 {
+		a1 = 1
+	}
+	if a2 == 0 {
+		a2 = 1
+	}
+	info.Density = math.Log(float64(a1)/float64(a2)) * (float64(sn)/sn_sum + 1) * (float64(swn)/swn_sum + 1) * a3
 	avg := info.getAvg()
-	info.score = math.Log(avg) * float64(info.DensitySum) * math.Log(float64(info.TextCount-info.LinkTextCount+1)) * math.Log10(float64(info.Pcount+2))
+
+	info.score = math.Log(avg) * float64(info.Density) * math.Log(float64(info.Pcount+2))
 }
 
 func (info *Info) getAvg() float64 {

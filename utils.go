@@ -25,8 +25,27 @@ var (
 		regexp.MustCompile(`([\d]{4})/([\d]{1,2})/([\d]{1,2})\s*([\d]{1,2}:[\d]{1,2})?`),
 		regexp.MustCompile(`([\d]{4})年([\d]{1,2})月([\d]{1,2})日\s*([\d]{1,2}:[\d]{1,2})?`),
 	}
-	ua = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.98 Safari/537.36"
 )
+
+func countStopWords(str string) int {
+	var c = 0
+	for k, _ := range stopwords {
+		c += strings.Count(str, k)
+	}
+	if c == 0 {
+		c = 1
+	}
+	return c
+}
+
+func countSn(str string) int {
+	sn := strings.Count(str, ".")
+	sn += strings.Count(str, "。")
+	if sn == 0 {
+		sn = 1
+	}
+	return sn
+}
 
 func limitNewlineRuns(s string) string {
 	return newlineRun.ReplaceAllString(s, " ")

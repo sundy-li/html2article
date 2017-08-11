@@ -5,7 +5,13 @@
 
 
 ## Performance
-  avg 0.006ms/op per article(about 20wqps), accuracy >= 98% (对比其他开源实现,可能是目前最快的html2article实现,我们测试的数据集约3kw来自于微信公众号,各大类中文科技媒体历史文章,目前能达到98%以上准确率)
+ - Accuracy: `>= 98% `
+ - Qps: 2w/s , 0.06ms/op ```
+         go test -bench=.
+	      BenchmarkExtract-4   	   20000	     66341 ns/op
+	    ```
+	      
+ - 说明(对比其他开源实现,可能是目前最快的html2article实现,我们测试的数据集约3kw来自于微信公众号,各大类中文科技媒体历史文章,目前能达到98%以上准确率)
 
 
 ## Examples
