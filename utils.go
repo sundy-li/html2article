@@ -295,6 +295,6 @@ func setAttr(n *html.Node, attrName, value string) {
 	if len(n.Attr) == 0 {
 		n.Attr = []html.Attribute{}
 	}
-	n.Attr[len(n.Attr)].Key = attrName
-	n.Attr[len(n.Attr)].Val = value
+	n.Attr[len(n.Attr)-1].Key = attrName
+	n.Attr[len(n.Attr)-1].Val = value
 }
