@@ -173,11 +173,6 @@ func (ec *extractor) getBestMatch() (node *html.Node, err error) {
 	}
 	var maxScore float64 = -100
 	for kinfo, v := range ec.data {
-		// //wechat
-		// if cls := attr(v, "id"); cls == "js_content" {
-		// 	node = v
-		// 	return
-		// }
 		if kinfo.score >= maxScore {
 			maxScore = kinfo.score
 			node = v

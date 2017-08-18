@@ -38,6 +38,10 @@
 		println("article title is =>", article.Title)
 		println("article publishtime is =>", article.Publishtime)
 		println("article content is =>", article.Content)
+		
+		//parse the article to be readability
+		article.Readable(urlStr)
+		println("read=>", article.ReadContent)
 	}
 
 

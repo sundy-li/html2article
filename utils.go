@@ -293,7 +293,7 @@ func setAttr(n *html.Node, attrName, value string) {
 		}
 	}
 	if len(n.Attr) == 0 {
-		n.Attr = []html.Attribute{}
+		n.Attr = make([]html.Attribute{}, 1)
 	}
 	n.Attr[len(n.Attr)-1].Key = attrName
 	n.Attr[len(n.Attr)-1].Val = value
