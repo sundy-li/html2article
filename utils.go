@@ -201,7 +201,7 @@ func getImages(node *html.Node) []string {
 }
 
 func isContentNode(n *html.Node) bool {
-	return n.DataAtom == atom.Div || n.DataAtom == atom.Section || n.DataAtom == atom.Table || n.DataAtom == atom.Tr || n.DataAtom == atom.Td || n.DataAtom == atom.Tbody
+	return n.DataAtom == atom.Div || n.DataAtom == atom.Section || n.DataAtom == atom.Table || n.DataAtom == atom.Tr || n.DataAtom == atom.Td || n.DataAtom == atom.Tbody || n.DataAtom == atom.Article
 }
 
 func isTag(a atom.Atom) selector {
