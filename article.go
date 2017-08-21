@@ -30,7 +30,7 @@ func (a *Article) Readable(urlStr string) {
 // ParseReadContent parse the ReadContent to be readability
 func (a *Article) ParseReadContent() {
 	a.cleanStyle(a.contentNode, "class", "id", "style", "width", "height", "onclick", "onmouseover", "border")
-	a.clean(a.contentNode, atom.Object, atom.H1)
+	a.clean(a.contentNode, atom.Script, atom.Object, atom.H1)
 	a.ReadContent, _ = getHtml(a.contentNode)
 }
 
