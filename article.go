@@ -30,7 +30,9 @@ func (a *Article) Readable(urlStr string) {
 // ParseReadContent parse the ReadContent to be readability
 func (a *Article) ParseReadContent() {
 	a.cleanStyle(a.contentNode, "class", "id", "style", "width", "height", "onclick", "onmouseover", "border")
-	a.clean(a.contentNode, atom.Script, atom.Object, atom.H1)
+	a.clean(a.contentNode, func(n *html.Node) bool {
+		return n.Type == html.CommentNode || n.DataAtom == atom.Script || n.DataAtom == atom.Object || n.DataAtom == atom.H1
+	})
 	a.ReadContent, _ = getHtml(a.contentNode)
 }
 
@@ -77,16 +79,14 @@ func (a *Article) Paragraphs() []string {
 	return paras
 }
 
-func (a *Article) clean(sel *html.Node, tags ...atom.Atom) {
+func (a *Article) clean(sel *html.Node, toClean selector) {
 	for c := sel.FirstChild; c != nil; c = c.NextSibling {
-		a.clean(c, tags...)
-		for _, tag := range tags {
-			if isTag(tag)(c) {
-				pre := c.PrevSibling
-				sel.RemoveChild(c)
-				c = pre
-				break
-			}
+		if toClean(c) {
+			pre := c.PrevSibling
+			sel.RemoveChild(c)
+			c = pre
+		} else {
+			a.clean(c, toClean)
 		}
 		if c == nil {
 			break

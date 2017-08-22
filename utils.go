@@ -204,6 +204,10 @@ func isContentNode(n *html.Node) bool {
 	return n.DataAtom == atom.Div || n.DataAtom == atom.Section || n.DataAtom == atom.Table || n.DataAtom == atom.Tr || n.DataAtom == atom.Td || n.DataAtom == atom.Tbody || n.DataAtom == atom.Article
 }
 
+func isNoisingNode(n *html.Node) bool {
+	return n.DataAtom == atom.Div || n.DataAtom == atom.Script
+}
+
 func isTag(a atom.Atom) selector {
 	return func(n *html.Node) bool {
 		return n.DataAtom == a
@@ -269,7 +273,7 @@ func find(n *html.Node, fn selector) *html.Node {
 
 func walk(n *html.Node, fn selector) {
 	if fn(n) {
-		for c := n.FirstChild; c != nil; c = c.NextSibling {
+		for c := n.LastChild; c != nil; c = c.PrevSibling {
 			walk(c, fn)
 		}
 	}
@@ -295,6 +299,8 @@ func setAttr(n *html.Node, attrName, value string) {
 	if len(n.Attr) == 0 {
 		n.Attr = make([]html.Attribute, 1)
 	}
-	n.Attr[len(n.Attr)-1].Key = attrName
-	n.Attr[len(n.Attr)-1].Val = value
+	n.Attr = append(n.Attr, html.Attribute{
+		Key: attrName,
+		Val: value,
+	})
 }
