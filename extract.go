@@ -15,6 +15,7 @@ type extractor struct {
 	data    map[*Info]*html.Node
 	urlStr  string
 	doc     *html.Node
+
 	maxDens float64
 	sn      float64
 	swn     float64

@@ -81,11 +81,12 @@ func (a *Article) Paragraphs() []string {
 
 func (a *Article) clean(sel *html.Node, toClean selector) {
 	for c := sel.FirstChild; c != nil; c = c.NextSibling {
-		a.clean(c, toClean)
 		if toClean(c) {
 			pre := c.PrevSibling
 			sel.RemoveChild(c)
 			c = pre
+		} else {
+			a.clean(c, toClean)
 		}
 		if c == nil {
 			break
