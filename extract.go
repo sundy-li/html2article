@@ -12,12 +12,12 @@ import (
 )
 
 type extractor struct {
-	data   map[*Info]*html.Node
-	urlStr string
-	doc    *html.Node
-
-	sn  float64
-	swn float64
+	data    map[*Info]*html.Node
+	urlStr  string
+	doc     *html.Node
+	maxDens float64
+	sn      float64
+	swn     float64
 }
 
 func NewFromHtml(htmlStr string) (ext *extractor, err error) {
@@ -73,6 +73,8 @@ func (ec *extractor) ToArticle() (article *Article, err error) {
 		err = ERROR_NOTFOUND
 		return
 	}
+	ec.denoise(node)
+
 	article = &Article{}
 	// Get the Content
 	article.contentNode = node
@@ -160,6 +162,25 @@ func (ec *extractor) getInfo(node *html.Node) (info *Info) {
 	return
 }
 
+//正文去噪
+//dmin 最小文本密度为正文最大文本密度的3/10
+//去噪即删掉正文中文本密度小于dmin的非文本节点
+func (ec *extractor) denoise(node *html.Node) {
+	dmin := ec.maxDens * 0.3
+	walk(node, func(n *html.Node) bool {
+		if isNoisingNode(n) {
+			info := ec.getInfo(n)
+			if info.Density < dmin {
+				pre := n.PrevSibling
+				n.Parent.RemoveChild(n)
+				n.PrevSibling = pre
+				return false
+			}
+		}
+		return true
+	})
+}
+
 func (ec *extractor) addNode(node *html.Node, info *Info) {
 	info.node = node
 	info.CalScore(ec.sn, ec.swn)
@@ -176,6 +197,9 @@ func (ec *extractor) getBestMatch() (node *html.Node, err error) {
 		if kinfo.score >= maxScore {
 			maxScore = kinfo.score
 			node = v
+		}
+		if kinfo.Density > ec.maxDens {
+			ec.maxDens = kinfo.Density
 		}
 	}
 	if node == nil {
