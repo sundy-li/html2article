@@ -205,7 +205,8 @@ func isContentNode(n *html.Node) bool {
 }
 
 func isNoisingNode(n *html.Node) bool {
-	return n.DataAtom == atom.Div || n.DataAtom == atom.Script
+	// isnoreturn n.DataAtom != atom.A && n.DataAtom != atom.Image && n.DataAtom != atom.P
+	return n.DataAtom == atom.Div || n.DataAtom == atom.Script || n.DataAtom == atom.Section
 }
 
 func isTag(a atom.Atom) selector {
@@ -273,7 +274,7 @@ func find(n *html.Node, fn selector) *html.Node {
 
 func walk(n *html.Node, fn selector) {
 	if fn(n) {
-		for c := n.LastChild; c != nil; c = c.PrevSibling {
+		for c := n.FirstChild; c != nil; c = c.NextSibling {
 			walk(c, fn)
 		}
 	}

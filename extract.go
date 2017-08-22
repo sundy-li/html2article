@@ -12,9 +12,9 @@ import (
 )
 
 type extractor struct {
-	data    map[*Info]*html.Node
-	urlStr  string
-	doc     *html.Node
+	data   map[*Info]*html.Node
+	urlStr string
+	doc    *html.Node
 
 	maxDens float64
 	sn      float64
@@ -172,9 +172,9 @@ func (ec *extractor) denoise(node *html.Node) {
 		if isNoisingNode(n) {
 			info := ec.getInfo(n)
 			if info.Density < dmin {
-				pre := n.PrevSibling
+				next := n.NextSibling
 				n.Parent.RemoveChild(n)
-				n.PrevSibling = pre
+				n.NextSibling = next
 				return false
 			}
 		}

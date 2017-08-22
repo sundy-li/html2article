@@ -89,7 +89,10 @@ func (a *Article) clean(sel *html.Node, toClean selector) {
 			a.clean(c, toClean)
 		}
 		if c == nil {
-			break
+			c = sel.FirstChild
+			if c == nil {
+				break
+			}
 		}
 	}
 }
