@@ -31,7 +31,7 @@ func (a *Article) Readable(urlStr string) {
 func (a *Article) ParseReadContent() {
 	a.cleanStyle(a.contentNode, "class", "id", "style", "width", "height", "onclick", "onmouseover", "border")
 	a.clean(a.contentNode, func(n *html.Node) bool {
-		return n.Type == html.CommentNode || n.DataAtom == atom.Script || n.DataAtom == atom.Object || n.DataAtom == atom.H1
+		return n.Type == html.CommentNode || n.DataAtom == atom.Script || n.DataAtom == atom.Object
 	})
 	a.ReadContent, _ = getHtml(a.contentNode)
 }
