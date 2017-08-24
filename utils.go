@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
@@ -85,6 +86,28 @@ func getTime(str string) int64 {
 // get Text and transform the charset
 func getText(n *html.Node, filter ...selector) string {
 	return limitNewlineRuns(strings.TrimSpace(text(n, filter...)))
+}
+
+//压缩html
+//将多个空格压缩为一个空格
+func Compress(str string) string {
+	buf := make([]byte, 0, len(str)/2)
+	buffer := bytes.NewBuffer(buf)
+
+	flag := false // 标识当前是否已经有一个空格
+	for _, r := range str {
+		if unicode.IsSpace(r) {
+			if flag {
+				continue
+			} else {
+				flag = true
+			}
+		} else {
+			flag = false
+		}
+		buffer.WriteRune(r)
+	}
+	return buffer.String()
 }
 
 func text(n *html.Node, filter ...selector) string {
