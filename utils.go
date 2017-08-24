@@ -205,8 +205,11 @@ func isContentNode(n *html.Node) bool {
 }
 
 func isNoisingNode(n *html.Node) bool {
-	// isnoreturn n.DataAtom != atom.A && n.DataAtom != atom.Image && n.DataAtom != atom.P
-	return n.DataAtom == atom.Div || n.DataAtom == atom.Script || n.DataAtom == atom.Section
+	switch n.DataAtom {
+	case atom.Div, atom.Script, atom.Section, atom.Footer:
+		return true
+	}
+	return false
 }
 
 func isTag(a atom.Atom) selector {
