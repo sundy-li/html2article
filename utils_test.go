@@ -12,46 +12,46 @@ func TestCompress(t *testing.T) {
 		want string
 	}{
 		{
-			name: "simple0",
+			name: "test0",
 			args: args{
-				str: "simple\n",
+				str: "test ",
 			},
-			want: "simple\n",
+			want: "test ",
 		},
 		{
-			name: "simple1",
+			name: "test1",
 			args: args{
-				str: " simple ",
+				str: " test ",
 			},
-			want: " simple ",
+			want: " test ",
 		},
 		{
-			name: "simple2",
+			name: "test2",
 			args: args{
-				str: "simple 2  ",
+				str: "test 2  ",
 			},
-			want: "simple 2 ",
+			want: "test 2 ",
 		},
 		{
-			name: "simple3",
+			name: "test3",
 			args: args{
-				str: "simple 3  \n    ",
+				str: "test 3  \n    ",
 			},
-			want: "simple 3 ",
+			want: "test 3 ",
 		},
 		{
-			name: "simple4",
+			name: "test4",
 			args: args{
-				str: "simple4",
+				str: "test4",
 			},
-			want: "simple4",
+			want: "test4",
 		},
 		{
-			name: "simple5",
+			name: "test5",
 			args: args{
-				str: "simple4  simple4  \n simple   ",
+				str: "test5  test5  \n test   ",
 			},
-			want: "simple4 simple4 simple ",
+			want: "test5 test5 test ",
 		},
 	}
 	for _, tt := range tests {

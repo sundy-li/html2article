@@ -18,8 +18,6 @@ type selector func(*html.Node) bool
 type Style string
 
 var (
-	newlineRun = regexp.MustCompile(`\s+`)
-
 	timeRegex = []*regexp.Regexp{
 		regexp.MustCompile(`([\d]{4})-([\d]{1,2})-([\d]{1,2})\s*([\d]{1,2}:[\d]{1,2})?`),
 		regexp.MustCompile(`([\d]{4}).([\d]{1,2}).([\d]{1,2})\s*([\d]{1,2}:[\d]{1,2})?`),
@@ -46,10 +44,6 @@ func countSn(str string) int {
 		sn = 1
 	}
 	return sn
-}
-
-func limitNewlineRuns(s string) string {
-	return newlineRun.ReplaceAllString(s, " ")
 }
 
 func getTime(str string) int64 {
@@ -85,11 +79,11 @@ func getTime(str string) int64 {
 
 // get Text and transform the charset
 func getText(n *html.Node, filter ...selector) string {
-	return limitNewlineRuns(strings.TrimSpace(text(n, filter...)))
+	return Compress(strings.TrimSpace(text(n, filter...)))
 }
 
-//压缩html
-//将多个空格压缩为一个空格
+//压缩字符串
+//将多个空格字符压缩为一个空格
 func Compress(str string) string {
 	buf := make([]byte, 0, len(str)/2)
 	buffer := bytes.NewBuffer(buf)
@@ -101,6 +95,7 @@ func Compress(str string) string {
 				continue
 			} else {
 				flag = true
+				r = ' '
 			}
 		} else {
 			flag = false
