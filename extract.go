@@ -86,18 +86,17 @@ func (ec *extractor) ToArticle() (article *Article, err error) {
 	}
 	article.Images = getImages(node)
 	pnode := node.Parent
-	filterNode := func(n *html.Node) bool {
-		return n != node
-	}
 	for i := 0; i < 6 && pnode != nil; i++ {
-		article.Publishtime = getTime(getText(pnode, filterNode))
+		h, _ := getHtml(pnode)
+		article.Publishtime = getTime(h)
 		if article.Publishtime > 0 {
 			break
 		}
 		pnode = pnode.Parent
 	}
 	if article.Publishtime == 0 {
-		article.Publishtime = getTime(article.Content)
+		h, _ := getHtml(node)
+		article.Publishtime = getTime(h)
 	}
 	titleNode := find(ec.doc, isTag(atom.Title))
 	if titleNode != nil {
