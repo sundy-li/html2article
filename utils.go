@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
@@ -17,8 +18,6 @@ type selector func(*html.Node) bool
 type Style string
 
 var (
-	newlineRun = regexp.MustCompile(`\s+`)
-
 	timeRegex = []*regexp.Regexp{
 		regexp.MustCompile(`([\d]{4})-([\d]{1,2})-([\d]{1,2})\s*([\d]{1,2}:[\d]{1,2})?`),
 		regexp.MustCompile(`([\d]{4}).([\d]{1,2}).([\d]{1,2})\s*([\d]{1,2}:[\d]{1,2})?`),
@@ -45,10 +44,6 @@ func countSn(str string) int {
 		sn = 1
 	}
 	return sn
-}
-
-func limitNewlineRuns(s string) string {
-	return newlineRun.ReplaceAllString(s, " ")
 }
 
 func getTime(str string) int64 {
@@ -84,7 +79,30 @@ func getTime(str string) int64 {
 
 // get Text and transform the charset
 func getText(n *html.Node, filter ...selector) string {
-	return limitNewlineRuns(strings.TrimSpace(text(n, filter...)))
+	return Compress(strings.TrimSpace(text(n, filter...)))
+}
+
+//压缩字符串
+//将多个空格字符压缩为一个空格
+func Compress(str string) string {
+	buf := make([]byte, 0, len(str)/2)
+	buffer := bytes.NewBuffer(buf)
+
+	flag := false // 标识当前是否已经有一个空格
+	for _, r := range str {
+		if unicode.IsSpace(r) {
+			if flag {
+				continue
+			} else {
+				flag = true
+				r = ' '
+			}
+		} else {
+			flag = false
+		}
+		buffer.WriteRune(r)
+	}
+	return buffer.String()
 }
 
 func text(n *html.Node, filter ...selector) string {
