@@ -19,6 +19,12 @@ type extractor struct {
 	maxDens float64
 	sn      float64
 	swn     float64
+
+	option *Option
+}
+
+type Option struct {
+	RemoveNoise bool
 }
 
 func NewFromHtml(htmlStr string) (ext *extractor, err error) {
@@ -34,7 +40,7 @@ func NewFromReader(reader io.Reader) (ext *extractor, err error) {
 }
 
 func NewFromNode(doc *html.Node) (ext *extractor, err error) {
-	ext = &extractor{data: make(map[*Info]*html.Node), doc: doc}
+	ext = &extractor{data: make(map[*Info]*html.Node), doc: doc, option: DEFAULT_OPTION}
 	return
 }
 
@@ -57,7 +63,14 @@ func NewFromUrl(urlStr string) (ext *extractor, err error) {
 
 var (
 	ERROR_NOTFOUND = errors.New("Content not found")
+	DEFAULT_OPTION = &Option{
+		RemoveNoise: true,
+	}
 )
+
+func (ec *extractor) SetOption(option *Option) {
+	ec.option = option
+}
 
 func (ec *extractor) ToArticle() (article *Article, err error) {
 	body := find(ec.doc, isTag(atom.Body))
@@ -74,7 +87,9 @@ func (ec *extractor) ToArticle() (article *Article, err error) {
 		err = ERROR_NOTFOUND
 		return
 	}
-	ec.denoise(node)
+	if ec.option.RemoveNoise {
+		ec.denoise(node)
+	}
 
 	article = &Article{}
 	// Get the Content
@@ -165,20 +180,34 @@ func (ec *extractor) getInfo(node *html.Node) (info *Info) {
 //正文去噪
 //dmin 最小文本密度为正文最大文本密度的3/10
 //去噪即删掉正文中文本密度小于dmin的非文本节点
+//只清洗前后三个节点
 func (ec *extractor) denoise(node *html.Node) {
 	dmin := ec.maxDens * 0.3
-	walk(node, func(n *html.Node) bool {
+	var i = 0
+	for n := node.FirstChild; n != nil && i < 3; n = n.NextSibling {
 		if isNoisingNode(n) {
 			info := ec.getInfo(n)
 			if info.Density < dmin {
 				next := n.NextSibling
 				n.Parent.RemoveChild(n)
 				n.NextSibling = next
-				return false
 			}
 		}
-		return true
-	})
+		i++
+	}
+
+	i = 0
+	for n := node.LastChild; n != nil && i < 3; n = n.PrevSibling {
+		if isNoisingNode(n) {
+			info := ec.getInfo(n)
+			if info.Density < dmin {
+				pre := n.PrevSibling
+				n.Parent.RemoveChild(n)
+				n.PrevSibling = pre
+			}
+		}
+		i++
+	}
 }
 
 func (ec *extractor) addNode(node *html.Node, info *Info) {
