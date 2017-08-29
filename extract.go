@@ -137,7 +137,7 @@ func (ec *extractor) getInfo(node *html.Node) (info *Info) {
 		info.LeafList = append(info.LeafList, info.TextCount)
 		info.Data = node.Data
 		//get the title
-		str := strings.TrimSpace(info.Data)
+		str := strings.TrimSpace(Compress(info.Data))
 		if ec.option.AccurateTitle && !ec.atTitleMatched && strings.Contains(ec.title, str) {
 			switch node.Parent.DataAtom {
 			case atom.Meta, atom.Script, atom.Head:
