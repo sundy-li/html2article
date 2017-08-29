@@ -16,15 +16,19 @@ type extractor struct {
 	urlStr string
 	doc    *html.Node
 
-	maxDens float64
-	sn      float64
-	swn     float64
+	maxDens        float64
+	sn             float64
+	swn            float64
+	title          string
+	accurateTitle  string
+	atTitleMatched bool
 
 	option *Option
 }
 
 type Option struct {
-	RemoveNoise bool
+	RemoveNoise   bool // remove noise node
+	AccurateTitle bool // find the accurate title node
 }
 
 func NewFromHtml(htmlStr string) (ext *extractor, err error) {
@@ -77,8 +81,18 @@ func (ec *extractor) ToArticle() (article *Article, err error) {
 	if body == nil {
 		body = ec.doc
 	}
+
+	titleNode := find(ec.doc, isTag(atom.Title))
+	if titleNode != nil {
+		ec.title = getText(titleNode)
+	}
+
 	ec.getSn()
 	ec.getInfo(body)
+	if ec.accurateTitle != "" {
+		ec.atTitleMatched = true
+	}
+
 	node, err := ec.getBestMatch()
 	if err != nil {
 		return
@@ -100,22 +114,11 @@ func (ec *extractor) ToArticle() (article *Article, err error) {
 		return
 	}
 	article.Images = getImages(node)
-	pnode := node.Parent
-	for i := 0; i < 6 && pnode != nil; i++ {
-		h, _ := getHtml(pnode)
-		article.Publishtime = getTime(h)
-		if article.Publishtime > 0 {
-			break
-		}
-		pnode = pnode.Parent
-	}
-	if article.Publishtime == 0 {
-		h, _ := getHtml(node)
-		article.Publishtime = getTime(h)
-	}
-	titleNode := find(ec.doc, isTag(atom.Title))
-	if titleNode != nil {
-		article.Title = getText(titleNode)
+	article.Publishtime = getPublishTime(node)
+	//find title
+	article.Title = ec.title
+	if ec.option.AccurateTitle && ec.atTitleMatched {
+		article.Title = ec.accurateTitle
 	}
 	article.Images = getImages(node)
 	return
@@ -133,8 +136,16 @@ func (ec *extractor) getInfo(node *html.Node) (info *Info) {
 		info.TextCount = len(node.Data)
 		info.LeafList = append(info.LeafList, info.TextCount)
 		info.Data = node.Data
-
-		ec.addNode(node, info)
+		//get the title
+		if ec.option.AccurateTitle && !ec.atTitleMatched && strings.Contains(ec.title, info.Data) {
+			switch node.Parent.DataAtom {
+			case atom.Meta, atom.Script, atom.Head:
+			default:
+				if size := len(info.Data); size > len(ec.accurateTitle) {
+					ec.accurateTitle = info.Data
+				}
+			}
+		}
 		return
 	} else if node.Type == html.ElementNode {
 		if isTag(atom.Style)(node) || isTag(atom.Script)(node) {
@@ -233,6 +244,36 @@ func (ec *extractor) getBestMatch() (node *html.Node, err error) {
 	}
 	if node == nil {
 		err = ERROR_NOTFOUND
+	}
+	return
+}
+
+func getPublishTime(node *html.Node) (ts int64) {
+	pnode := node.Parent
+	for i := 0; i < 6 && pnode != nil; i++ {
+		h, _ := getHtml(pnode)
+		ts = getTime(h)
+		if ts > 0 {
+			break
+		}
+		pnode = pnode.Parent
+	}
+	if ts == 0 {
+		h, _ := getHtml(node)
+		ts = getTime(h)
+	}
+	return
+}
+
+func getAccurateTitle(title string, node *html.Node) (ts int64) {
+	pnode := node.Parent
+	for i := 0; i < 3 && pnode != nil; i++ {
+		for tmpNode := pnode.PrevSibling; tmpNode != nil; tmpNode = tmpNode.PrevSibling {
+		}
+	}
+	if ts == 0 {
+		h, _ := getHtml(node)
+		ts = getTime(h)
 	}
 	return
 }
