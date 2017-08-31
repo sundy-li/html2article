@@ -82,6 +82,36 @@ func getText(n *html.Node, filter ...selector) string {
 	return Compress(strings.TrimSpace(text(n, filter...)))
 }
 
+func CompressHtml(str string) string {
+	buf := make([]byte, 0, len(str)/2)
+	buffer := bytes.NewBuffer(buf)
+
+	flag := false  // 标识当前是否已经有一个空格
+	inTag := false // 标识是否在tag里头
+
+	for _, r := range str {
+		if r == '<' {
+			inTag = true
+		} else if inTag && r == '/' {
+			inTag = false
+		}
+		if !inTag {
+			if unicode.IsSpace(r) {
+				if flag {
+					continue
+				} else {
+					flag = true
+					r = ' '
+				}
+			} else {
+				flag = false
+			}
+		}
+		buffer.WriteRune(r)
+	}
+	return buffer.String()
+}
+
 //压缩字符串
 //将多个空格字符压缩为一个空格
 func Compress(str string) string {
@@ -301,6 +331,26 @@ func walk(n *html.Node, fn selector) {
 	}
 }
 
+func walkRemove(n *html.Node, fn selector, del selector) {
+	if del(n) {
+		travesRemove(n)
+		return
+	}
+	if fn(n) {
+		for c := n.FirstChild; c != nil; c = c.NextSibling {
+			walkRemove(c, fn, del)
+		}
+	}
+}
+
+//remove node n when using ` c := node.FirstChild; c != nil; c = c.NextSibling` traves
+func travesRemove(n *html.Node) {
+	// println("removeing", n.Data, n.DataAtom)
+	next := n.NextSibling
+	n.Parent.RemoveChild(n)
+	n.NextSibling = next
+}
+
 func removeAttr(n *html.Node, attrName string) {
 	for i, a := range n.Attr {
 		if a.Key == attrName {
@@ -325,4 +375,33 @@ func setAttr(n *html.Node, attrName, value string) {
 		Key: attrName,
 		Val: value,
 	})
+}
+
+func distance(a, b string) int {
+	return distanceSize(a, b, len(a), len(b))
+}
+
+func distanceSize(a, b string, s1 int, s2 int) int {
+	if s1 == 0 || s2 == 0 {
+		return max(s1, s2)
+	}
+	if a[0] == b[0] {
+		return distanceSize(a[1:], b[1:], s1-1, s2-1)
+	}
+	return min(
+		min(distanceSize(a[1:], b[1:], s1-1, s2-1), distanceSize(a, b[1:], s1, s2-1)),
+		distanceSize(a[1:], b, s1-1, s2)) + 1
+}
+func max(a, b int) int {
+	if a < b {
+		return b
+	}
+	return a
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }

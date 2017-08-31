@@ -62,3 +62,23 @@ func TestCompress(t *testing.T) {
 		})
 	}
 }
+
+func TestDistance(t *testing.T) {
+	tests := []struct {
+		name string
+		a    string
+		b    string
+		want int
+	}{
+		{"1", "abc", "ab", 1},
+		{"2", "abc", "abd", 1},
+		{"3", "ab", "abcef", 3},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := distance(tt.a, tt.b); got != tt.want {
+				t.Errorf("Distance() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

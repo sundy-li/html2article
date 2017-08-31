@@ -18,6 +18,7 @@ type Info struct {
 	ImageCount    int
 
 	Data  string
+	avg   float64
 	score float64
 
 	node *html.Node
@@ -45,13 +46,12 @@ func (info *Info) CalScore(sn_sum, swn_sum float64) {
 		a2 = 1
 	}
 	info.Density = math.Log(float64(a1)/float64(a2)) * (float64(sn)/sn_sum + 1) * (float64(swn)/swn_sum + 1) * a3 * a4 * a5
-	avg := info.getAvg()
-
-	info.score = math.Log(avg) * float64(info.Density) * math.Log10(float64(info.Pcount+2))
+	info.avg = info.getAvg()
+	info.score = math.Log(info.avg) * float64(info.Density) * math.Log10(float64(info.Pcount+2))
 	// if info.score >= 1 {
 	// 	c := attr(info.node, "class")
 	// 	if c != "" {
-	// 		println("class:", c, info.score, info.Density, avg, math.Log10(float64(info.Pcount+2)), math.Log(float64(a1)/float64(a2)), (float64(sn)/sn_sum + 1), (float64(swn)/swn_sum + 1), a3, a4, a5)
+	// 		println("class:", c, info.score, info.Density, info.avg, math.Log10(float64(info.Pcount+2)), math.Log(float64(a1)/float64(a2)), (float64(sn)/sn_sum + 1), (float64(swn)/swn_sum + 1), a3, a4, a5)
 	// 	}
 	// }
 	return

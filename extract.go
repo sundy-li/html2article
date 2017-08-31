@@ -16,12 +16,11 @@ type extractor struct {
 	urlStr string
 	doc    *html.Node
 
-	maxDens        float64
-	sn             float64
-	swn            float64
-	title          string
-	accurateTitle  string
-	atTitleMatched bool
+	maxAvg        float64
+	sn            float64
+	swn           float64
+	title         string
+	accurateTitle string
 
 	option *Option
 }
@@ -89,10 +88,6 @@ func (ec *extractor) ToArticle() (article *Article, err error) {
 
 	ec.getSn()
 	ec.getInfo(body)
-	if ec.accurateTitle != "" {
-		ec.atTitleMatched = true
-	}
-
 	node, err := ec.getBestMatch()
 	if err != nil {
 		return
@@ -104,6 +99,7 @@ func (ec *extractor) ToArticle() (article *Article, err error) {
 	if ec.option.RemoveNoise {
 		ec.denoise(node)
 	}
+	ec.filter(node)
 
 	article = &Article{}
 	// Get the Content
@@ -117,7 +113,7 @@ func (ec *extractor) ToArticle() (article *Article, err error) {
 	article.Publishtime = getPublishTime(node)
 	//find title
 	article.Title = ec.title
-	if ec.option.AccurateTitle && ec.atTitleMatched {
+	if ec.option.AccurateTitle && ec.accurateTitle != "" {
 		article.Title = ec.accurateTitle
 	}
 	article.Images = getImages(node)
@@ -132,21 +128,17 @@ func (ec *extractor) getSn() {
 
 func (ec *extractor) getInfo(node *html.Node) (info *Info) {
 	info = NewInfo()
+
+	//remove unused element
+	switch node.DataAtom {
+	case atom.Script, atom.Object, atom.Style, atom.Iframe:
+		travesRemove(node)
+		return
+	}
 	if node.Type == html.TextNode {
 		info.TextCount = len(node.Data)
 		info.LeafList = append(info.LeafList, info.TextCount)
 		info.Data = node.Data
-		//get the title
-		str := strings.TrimSpace(Compress(info.Data))
-		if ec.option.AccurateTitle && !ec.atTitleMatched && strings.Contains(ec.title, str) {
-			switch node.Parent.DataAtom {
-			case atom.Meta, atom.Script, atom.Head:
-			default:
-				if size := len(str); size > len(ec.accurateTitle) {
-					ec.accurateTitle = str
-				}
-			}
-		}
 		return
 	} else if node.Type == html.ElementNode {
 		if isTag(atom.Style)(node) || isTag(atom.Script)(node) {
@@ -185,40 +177,76 @@ func (ec *extractor) getInfo(node *html.Node) (info *Info) {
 			ec.addNode(node, info)
 		}
 		return
+	} else if node.Type == html.CommentNode {
+		travesRemove(node)
 	}
 	return
 }
 
+func (ec *extractor) filter(node *html.Node) {
+	var i = 0
+	for n := node; n != nil && i < 2; n = n.PrevSibling {
+		ec.filterTitle(n)
+	}
+}
+
+//正文去掉title 编辑距离太近的节点,设置title
+func (ec *extractor) filterTitle(node *html.Node) {
+	var i = 0
+	for n := node.FirstChild; n != nil && i < 2; n = n.NextSibling {
+		txt := getText(n)
+		a := txt
+		if len(a) > len(ec.title)+3 {
+			continue
+		}
+		if len(a) > len(ec.title) {
+			a = a[:len(ec.title)]
+		}
+		size := 0
+		if len(a) > 10 && len(ec.title) > 10 {
+			size = distance(a[:10], ec.title[:10])
+		} else {
+			size = distance(a, ec.title[:len(a)])
+		}
+
+		if size <= 3 && size < len(a)/2 {
+			travesRemove(n)
+			if ec.option.AccurateTitle {
+				ec.accurateTitle = txt
+			}
+		}
+	}
+}
+
 //正文去噪
-//dmin 最小文本密度为正文最大文本密度的3/10
-//去噪即删掉正文中文本密度小于dmin的非文本节点
+//去噪即删掉正文中文文本方差小于maxAvg * 0.3的非文本节点
 //只清洗前后三个节点
 func (ec *extractor) denoise(node *html.Node) {
-	dmin := ec.maxDens * 0.3
-	var i = 0
+	avgm := ec.maxAvg * 0.3
+	var i = -1
 	for n := node.FirstChild; n != nil && i < 3; n = n.NextSibling {
+		i++
 		if isNoisingNode(n) {
 			info := ec.getInfo(n)
-			if info.Density < dmin {
-				next := n.NextSibling
-				n.Parent.RemoveChild(n)
-				n.NextSibling = next
+			info.avg = info.getAvg()
+			if info.avg < avgm {
+				travesRemove(n)
+				continue
 			}
 		}
-		i++
 	}
 
-	i = 0
+	i = -1
 	for n := node.LastChild; n != nil && i < 3; n = n.PrevSibling {
+		i++
 		if isNoisingNode(n) {
 			info := ec.getInfo(n)
-			if info.Density < dmin {
-				pre := n.PrevSibling
-				n.Parent.RemoveChild(n)
-				n.PrevSibling = pre
+			info.avg = info.getAvg()
+			if info.avg < avgm {
+				travesRemove(n)
+				continue
 			}
 		}
-		i++
 	}
 }
 
@@ -239,8 +267,8 @@ func (ec *extractor) getBestMatch() (node *html.Node, err error) {
 			maxScore = kinfo.score
 			node = v
 		}
-		if kinfo.Density > ec.maxDens {
-			ec.maxDens = kinfo.Density
+		if kinfo.avg > ec.maxAvg {
+			ec.maxAvg = kinfo.avg
 		}
 	}
 	if node == nil {
@@ -258,19 +286,6 @@ func getPublishTime(node *html.Node) (ts int64) {
 			break
 		}
 		pnode = pnode.Parent
-	}
-	if ts == 0 {
-		h, _ := getHtml(node)
-		ts = getTime(h)
-	}
-	return
-}
-
-func getAccurateTitle(title string, node *html.Node) (ts int64) {
-	pnode := node.Parent
-	for i := 0; i < 3 && pnode != nil; i++ {
-		for tmpNode := pnode.PrevSibling; tmpNode != nil; tmpNode = tmpNode.PrevSibling {
-		}
 	}
 	if ts == 0 {
 		h, _ := getHtml(node)
