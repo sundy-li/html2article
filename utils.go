@@ -224,7 +224,7 @@ func isContentNode(n *html.Node) bool {
 
 func isNoisingNode(n *html.Node) bool {
 	switch n.DataAtom {
-	case atom.Div, atom.Script, atom.Section, atom.Footer:
+	case atom.Div, atom.Script, atom.Ul, atom.Tr, atom.Section, atom.Footer:
 		return true
 	}
 	return false
