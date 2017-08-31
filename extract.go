@@ -184,16 +184,21 @@ func (ec *extractor) getInfo(node *html.Node) (info *Info) {
 }
 
 func (ec *extractor) filter(node *html.Node) {
-	var i = 0
-	for n := node; n != nil && i < 2; n = n.PrevSibling {
+	for n := node; n != nil; n = n.PrevSibling {
 		ec.filterTitle(n)
+	}
+	if node.Parent != nil {
+		for n := node.Parent; n != nil; n = n.PrevSibling {
+			ec.filterTitle(n)
+		}
 	}
 }
 
 //正文去掉title 编辑距离太近的节点,设置title
 func (ec *extractor) filterTitle(node *html.Node) {
 	var i = 0
-	for n := node.FirstChild; n != nil && i < 2; n = n.NextSibling {
+	for n := node.FirstChild; n != nil && i < 3; n = n.NextSibling {
+		i++
 		txt := getText(n)
 		a := txt
 		if len(a) > len(ec.title)+3 {
