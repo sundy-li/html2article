@@ -66,6 +66,7 @@ func getTime(str string) int64 {
 				t := time.Now().Add(-time.Hour * time.Duration(24*d))
 				return fn(t.Year(), int(t.Month()), t.Day(), 0, 0)
 			}
+			continue
 		}
 		if i == 6 {
 			if len(ts) == 2 {
@@ -73,6 +74,7 @@ func getTime(str string) int64 {
 				t := time.Now().Add(-time.Hour * time.Duration(h))
 				return fn(t.Year(), int(t.Month()), t.Day(), 0, 0)
 			}
+			continue
 		}
 		if len(ts) < 4 {
 			continue
