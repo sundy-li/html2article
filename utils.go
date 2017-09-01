@@ -52,7 +52,7 @@ func countSn(str string) int {
 func getTime(str string) int64 {
 	fn := func(year int, month int, day int, hour int, minute int) int64 {
 		v := fmt.Sprintf("%04d%02d%02d %02d:%02d", year, month, day, hour, minute)
-		tm, err := time.ParseInLocation("20060102 15:04", v, time.Local)
+		tm, err := time.Parse("20060102 15:04", v)
 		if err == nil {
 			return tm.Unix()
 		}
