@@ -96,12 +96,13 @@ func (ec *extractor) ToArticle() (article *Article, err error) {
 		err = ERROR_NOTFOUND
 		return
 	}
+	article = &Article{}
+	article.Publishtime = getPublishTime(node)
 	if ec.option.RemoveNoise {
 		ec.denoise(node)
 	}
 	ec.filter(node)
 
-	article = &Article{}
 	// Get the Content
 	article.contentNode = node
 	article.Content = getText(node)
@@ -110,7 +111,6 @@ func (ec *extractor) ToArticle() (article *Article, err error) {
 		return
 	}
 	article.Images = getImages(node)
-	article.Publishtime = getPublishTime(node)
 	//find title
 	article.Title = ec.title
 	if ec.option.AccurateTitle && ec.accurateTitle != "" {

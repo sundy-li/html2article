@@ -19,10 +19,13 @@ type Style string
 
 var (
 	timeRegex = []*regexp.Regexp{
+		regexp.MustCompile(`([\d]{4})-([\d]{1,2})-([\d]{1,2})`),
 		regexp.MustCompile(`([\d]{4})-([\d]{1,2})-([\d]{1,2})\s+([\d]{1,2}:[\d]{1,2})?`),
-		regexp.MustCompile(`([\d]{4}).([\d]{1,2}).([\d]{1,2})\s+([\d]{1,2}:[\d]{1,2})?`),
+		regexp.MustCompile(`([\d]{4})\.([\d]{1,2})\.([\d]{1,2})\s+([\d]{1,2}:[\d]{1,2})?`),
 		regexp.MustCompile(`([\d]{4})/([\d]{1,2})/([\d]{1,2})\s+([\d]{1,2}:[\d]{1,2})?`),
 		regexp.MustCompile(`([\d]{4})年([\d]{1,2})月([\d]{1,2})日\s*([\d]{1,2}:[\d]{1,2})?`),
+		regexp.MustCompile(`([\d]{1,2})\s?天前`),
+		regexp.MustCompile(`([\d]{1,2})\s?小时前`),
 	}
 )
 
@@ -47,8 +50,32 @@ func countSn(str string) int {
 }
 
 func getTime(str string) int64 {
-	for _, t := range timeRegex {
+	fn := func(year int, month int, day int, hour int, minute int) int64 {
+		v := fmt.Sprintf("%04d%02d%02d %02d:%02d", year, month, day, hour, minute)
+		tm, err := time.Parse("20060102 15:04", v)
+		if err == nil {
+			return tm.Unix()
+		}
+		return 0
+	}
+	for i, t := range timeRegex {
 		ts := t.FindStringSubmatch(str)
+		if i == 5 {
+			if len(ts) == 2 {
+				d, _ := strconv.Atoi(ts[1])
+				t := time.Now().Add(-time.Hour * time.Duration(24*d))
+				return fn(t.Year(), int(t.Month()), t.Day(), 0, 0)
+			}
+			continue
+		}
+		if i == 6 {
+			if len(ts) == 2 {
+				h, _ := strconv.Atoi(ts[1])
+				t := time.Now().Add(-time.Hour * time.Duration(h))
+				return fn(t.Year(), int(t.Month()), t.Day(), 0, 0)
+			}
+			continue
+		}
 		if len(ts) < 4 {
 			continue
 		}
@@ -67,12 +94,8 @@ func getTime(str string) int64 {
 		if len(timeAt) > 1 {
 			minute, _ = strconv.Atoi(timeAt[1])
 		}
+		return fn(year, month, day, hour, minute)
 
-		v := fmt.Sprintf("%04d%02d%02d %02d:%02d", year, month, day, hour, minute)
-		tm, err := time.Parse("20060102 15:04", v)
-		if err == nil {
-			return tm.Unix()
-		}
 	}
 	return 0
 }
