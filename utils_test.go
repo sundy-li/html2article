@@ -1,6 +1,8 @@
 package html2article
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestCompress(t *testing.T) {
 	type args struct {
@@ -78,6 +80,26 @@ func TestDistance(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := distance(tt.a, tt.b); got != tt.want {
 				t.Errorf("Distance() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGetTime(t *testing.T) {
+	tests := []struct {
+		name string
+		a    string
+		want int64
+	}{
+		{"1", "fdaf5小时前 ggagg", 1504195200},
+		{"2", "hgha3天前fdsa", 1503936000},
+		{"3", ">2015-11-25<fd", 1448380800},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := getTime(tt.a); got != tt.want {
+				t.Errorf("Time = %v, want %v", got, tt.want)
 			}
 		})
 	}
