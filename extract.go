@@ -16,11 +16,12 @@ type extractor struct {
 	urlStr string
 	doc    *html.Node
 
-	maxAvg        float64
-	sn            float64
-	swn           float64
-	title         string
-	accurateTitle string
+	maxAvg           float64
+	sn               float64
+	swn              float64
+	title            string
+	accurateTitle    string
+	titleDistanceMin int
 
 	option *Option
 }
@@ -84,6 +85,7 @@ func (ec *extractor) ToArticle() (article *Article, err error) {
 	titleNode := find(ec.doc, isTag(atom.Title))
 	if titleNode != nil {
 		ec.title = getText(titleNode)
+		ec.titleDistanceMin = len(ec.title) / 2
 	}
 
 	ec.getSn()
@@ -201,10 +203,11 @@ func (ec *extractor) filterTitle(n *html.Node) {
 	} else {
 		size = distance(a, ec.title[:len(a)])
 	}
-	if size <= 3 && size < len(a)/2 {
+	if size <= ec.titleDistanceMin && size < len(a)/2 {
 		travesRemove(n)
 		if ec.option.AccurateTitle {
 			ec.accurateTitle = txt
+			ec.titleDistanceMin = size
 		}
 	}
 }
