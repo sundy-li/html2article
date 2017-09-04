@@ -15,7 +15,7 @@ func main() {
 		panic(err)
 	}
 	println("article title is =>", article.Title)
-	println("article publishtime is =>", article.Publishtime)
+	println("article publishtime is =>", article.Publishtime) //using UTC timezone
 	println("article content is =>", article.Content)
 
 	//parse the article to be readability

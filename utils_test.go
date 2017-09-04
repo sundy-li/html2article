@@ -2,6 +2,7 @@ package html2article
 
 import (
 	"testing"
+	"time"
 )
 
 func TestCompress(t *testing.T) {
@@ -91,9 +92,8 @@ func TestGetTime(t *testing.T) {
 		a    string
 		want int64
 	}{
-		{"1", "fdaf5小时前 ggagg", 1504195200},
-		{"2", "hgha3天前fdsa", 1503936000},
-		{"3", ">2015-11-25<fd", 1448380800},
+		{"1", "fdaf5小时前 ggagg", time.Now().Add(-5*time.Hour).Unix() / 3600 * 3600},
+		{"2", "hgha3天前fdsa", (time.Now().Add(-3 * time.Hour * 24).Unix()) / int64(24*3600) * int64(24*3600)},
 	}
 
 	for _, tt := range tests {

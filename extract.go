@@ -101,8 +101,6 @@ func (ec *extractor) ToArticle() (article *Article, err error) {
 	if ec.option.RemoveNoise {
 		ec.denoise(node)
 	}
-	ec.filter(node)
-
 	// Get the Content
 	article.contentNode = node
 	article.Content = getText(node)
@@ -139,6 +137,10 @@ func (ec *extractor) getInfo(node *html.Node) (info *Info) {
 		info.TextCount = len(node.Data)
 		info.LeafList = append(info.LeafList, info.TextCount)
 		info.Data = node.Data
+
+		if node.Parent != nil && isTitleNode(node.Parent) {
+			ec.filterTitle(node.Parent)
+		}
 		return
 	} else if node.Type == html.ElementNode {
 		if isTag(atom.Style)(node) || isTag(atom.Script)(node) {
@@ -183,42 +185,26 @@ func (ec *extractor) getInfo(node *html.Node) (info *Info) {
 	return
 }
 
-func (ec *extractor) filter(node *html.Node) {
-	for n := node; n != nil; n = n.PrevSibling {
-		ec.filterTitle(n)
-	}
-	if node.Parent != nil {
-		for n := node.Parent; n != nil; n = n.PrevSibling {
-			ec.filterTitle(n)
-		}
-	}
-}
-
 //正文去掉title 编辑距离太近的节点,设置title
-func (ec *extractor) filterTitle(node *html.Node) {
-	var i = 0
-	for n := node.FirstChild; n != nil && i < 3; n = n.NextSibling {
-		i++
-		txt := getText(n)
-		a := txt
-		if len(a) > len(ec.title)+3 {
-			continue
-		}
-		if len(a) > len(ec.title) {
-			a = a[:len(ec.title)]
-		}
-		size := 0
-		if len(a) > 10 && len(ec.title) > 10 {
-			size = distance(a[:10], ec.title[:10])
-		} else {
-			size = distance(a, ec.title[:len(a)])
-		}
-
-		if size <= 3 && size < len(a)/2 {
-			travesRemove(n)
-			if ec.option.AccurateTitle {
-				ec.accurateTitle = txt
-			}
+func (ec *extractor) filterTitle(n *html.Node) {
+	txt := getText(n)
+	a := txt
+	if len(a) > len(ec.title)+3 {
+		return
+	}
+	if len(a) > len(ec.title) {
+		a = a[:len(ec.title)]
+	}
+	size := 0
+	if len(a) > 10 && len(ec.title) > 10 {
+		size = distance(a[:10], ec.title[:10])
+	} else {
+		size = distance(a, ec.title[:len(a)])
+	}
+	if size <= 3 && size < len(a)/2 {
+		travesRemove(n)
+		if ec.option.AccurateTitle {
+			ec.accurateTitle = txt
 		}
 	}
 }

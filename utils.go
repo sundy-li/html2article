@@ -63,7 +63,7 @@ func getTime(str string) int64 {
 		if i == 5 {
 			if len(ts) == 2 {
 				d, _ := strconv.Atoi(ts[1])
-				t := time.Now().Add(-time.Hour * time.Duration(24*d))
+				t := time.Now().Add(-time.Hour*time.Duration(24*d) - 8*time.Hour)
 				return fn(t.Year(), int(t.Month()), t.Day(), 0, 0)
 			}
 			continue
@@ -71,8 +71,8 @@ func getTime(str string) int64 {
 		if i == 6 {
 			if len(ts) == 2 {
 				h, _ := strconv.Atoi(ts[1])
-				t := time.Now().Add(-time.Hour * time.Duration(h))
-				return fn(t.Year(), int(t.Month()), t.Day(), 0, 0)
+				t := time.Now().Add(-time.Hour*time.Duration(h) - 8*time.Hour)
+				return fn(t.Year(), int(t.Month()), t.Day(), t.Hour(), 0)
 			}
 			continue
 		}
@@ -278,6 +278,14 @@ func isContentNode(n *html.Node) bool {
 func isNoisingNode(n *html.Node) bool {
 	switch n.DataAtom {
 	case atom.Div, atom.Script, atom.Ul, atom.Tr, atom.Section, atom.Footer:
+		return true
+	}
+	return false
+}
+
+func isTitleNode(n *html.Node) bool {
+	switch n.DataAtom {
+	case atom.H1, atom.H2, atom.H3, atom.H4, atom.H5:
 		return true
 	}
 	return false

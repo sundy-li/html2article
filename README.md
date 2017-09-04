@@ -36,14 +36,22 @@
 			panic(err)
 		}
 		println("article title is =>", article.Title)
-		println("article publishtime is =>", article.Publishtime)
+		println("article publishtime is =>", article.Publishtime) //using UTC timezone
 		println("article content is =>", article.Content)
-		
+
 		//parse the article to be readability
 		article.Readable(urlStr)
 		println("read=>", article.ReadContent)
 	}
 
+## Options
+
+```
+	ext.SetOption(&html2article.Option{
+		AccurateTitle: true,  //Get the accurate title instead of from title tag
+		RemoveNoise: false,  //Remove the noise node such as some footer
+	})
+```
 
 
 
