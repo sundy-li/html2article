@@ -50,6 +50,10 @@ func countSn(str string) int {
 	return sn
 }
 
+func countChar(str string) int {
+	return len([]rune(Compress(str)))
+}
+
 func getTime(str string) int64 {
 	fn := func(year int, month int, day int, hour int, minute int) int64 {
 		v := fmt.Sprintf("%04d%02d%02d %02d:%02d", year, month, day, hour, minute)

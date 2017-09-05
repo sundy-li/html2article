@@ -13,6 +13,7 @@ type Info struct {
 	LinkTagCount  int
 	LeafList      []int
 	Density       float64
+	DensitySum    float64
 	Pcount        int
 	InputCount    int
 	ImageCount    int
@@ -29,16 +30,15 @@ func NewInfo() *Info {
 }
 
 func (info *Info) CalScore(sn_sum, swn_sum float64) {
-	//avg * ln((cn-lcn)/lcn) * (sn/snm + 1) * (swn/swnm + 1) * abs(ln((cn+1)/(tn+1)) * ln(pn+2) * (tn-in+1)/(tn+1) * (tn-mn+1)/(tn+1) )
 	a1 := info.TextCount - info.LinkTextCount
 	a2 := info.LinkTextCount
+
 	sn := countSn(info.Data)
 	swn := countStopWords(info.Data)
 
 	a3 := math.Abs(math.Log(float64(info.TextCount+1) / float64(info.TagCount+1)))
 	a4 := float64(info.TagCount-info.InputCount+1) / float64(info.TagCount+1)
 	a5 := float64(info.TagCount-info.ImageCount+1) / float64(info.TagCount+1)
-
 	if a1 == 0 {
 		a1 = 1
 	}
@@ -47,14 +47,14 @@ func (info *Info) CalScore(sn_sum, swn_sum float64) {
 	}
 	info.Density = math.Log(float64(a1)/float64(a2)) * (float64(sn)/sn_sum + 1) * (float64(swn)/swn_sum + 1) * a3 * a4 * a5
 	info.avg = info.getAvg()
-	info.score = math.Log(info.avg) * float64(info.Density) * math.Log10(float64(info.Pcount+2))
-	// if info.score >= 1 {
+	info.score = float64(info.Density) * math.Log(info.avg) * math.Log10(float64(info.Pcount+2))
+	// return
+	// if  info.score >= 0 {
 	// 	c := attr(info.node, "class")
-	// 	if c != "" {
-	// 		println("class:", c, info.score, info.Density, info.avg, math.Log10(float64(info.Pcount+2)), math.Log(float64(a1)/float64(a2)), (float64(sn)/sn_sum + 1), (float64(swn)/swn_sum + 1), a3, a4, a5)
+	// 	if true {
+	// 		println("class:", c, info.score, info.avg, math.Log10(float64(info.Pcount+2)), math.Log(float64(a1)/float64(a2)), (float64(sn)/sn_sum + 1), (float64(swn)/swn_sum + 1), a3, a4, a5, math.Log10(float64(info.Pcount+2)))
 	// 	}
 	// }
-	return
 }
 
 func (info *Info) getAvg() float64 {

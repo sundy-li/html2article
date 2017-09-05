@@ -52,6 +52,10 @@ func TestToArticle(t *testing.T) {
 			}
 			assert.Nil(err)
 
+			if attr(article.contentNode, "class") != testCase.ExpectClass {
+				t.Errorf("ToArticle %s error,got %v, want %v", testCase.Url, attr(article.contentNode, "class"), testCase.ExpectClass)
+			}
+
 			assert.Equal(attr(article.contentNode, "class"), testCase.ExpectClass)
 			assert.True(article.Publishtime > 1405732300)
 			assert.True(article.Publishtime < 1555732300)

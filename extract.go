@@ -29,6 +29,7 @@ type extractor struct {
 type Option struct {
 	RemoveNoise   bool // remove noise node
 	AccurateTitle bool // find the accurate title node
+	UserAgent     string
 }
 
 func NewFromHtml(htmlStr string) (ext *extractor, err error) {
@@ -49,7 +50,13 @@ func NewFromNode(doc *html.Node) (ext *extractor, err error) {
 }
 
 func NewFromUrl(urlStr string) (ext *extractor, err error) {
-	resp, err := http.Get(urlStr)
+	req, err := http.NewRequest("GET", urlStr, nil)
+	if err != nil {
+		return
+	}
+	req.Header = make(http.Header)
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36")
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return
 	}
@@ -136,9 +143,9 @@ func (ec *extractor) getInfo(node *html.Node) (info *Info) {
 		return
 	}
 	if node.Type == html.TextNode {
-		info.TextCount = len(node.Data)
-		info.LeafList = append(info.LeafList, info.TextCount)
 		info.Data = node.Data
+		info.TextCount = countChar(info.Data)
+		info.LeafList = append(info.LeafList, info.TextCount)
 
 		if node.Parent != nil && isTitleNode(node.Parent) {
 			ec.filterTitle(node.Parent)
@@ -162,12 +169,12 @@ func (ec *extractor) getInfo(node *html.Node) (info *Info) {
 		}
 
 		info.TagCount++
-
 		switch node.DataAtom {
 		case atom.A:
 			info.LinkTagCount++
-			if node.Parent.DataAtom != atom.P {
-				info.LinkTextCount += len(info.Data)
+			info.LinkTextCount += countChar(info.Data)
+			if node.Parent != nil && isTag(atom.P)(node.Parent) {
+				info.LinkTextCount /= 3
 			}
 		case atom.P:
 			info.Pcount++
@@ -176,7 +183,6 @@ func (ec *extractor) getInfo(node *html.Node) (info *Info) {
 		case atom.Input, atom.Textarea, atom.Button:
 			info.InputCount++
 		}
-
 		if isContentNode(node) {
 			ec.addNode(node, info)
 		}
