@@ -29,7 +29,7 @@ func (a *Article) Readable(urlStr string) {
 
 // ParseReadContent parse the ReadContent to be readability
 func (a *Article) ParseReadContent() {
-	a.cleanAttrs(a.contentNode, "class", "id", "width", "height", "onclick", "onmouseover", "border")
+	a.cleanAttrs(a.contentNode, "class", "id", "style", "width", "height", "onclick", "onmouseover", "border")
 	a.clean(a.contentNode, func(n *html.Node) bool {
 		return n.Type == html.CommentNode || n.DataAtom == atom.Script || n.DataAtom == atom.Object
 	})
