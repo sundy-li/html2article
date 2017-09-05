@@ -23,9 +23,10 @@ var (
 		regexp.MustCompile(`([\d]{4})-([\d]{1,2})-([\d]{1,2})\s+([\d]{1,2}:[\d]{1,2})?`),
 		regexp.MustCompile(`([\d]{4})\.([\d]{1,2})\.([\d]{1,2})\s+([\d]{1,2}:[\d]{1,2})?`),
 		regexp.MustCompile(`([\d]{4})/([\d]{1,2})/([\d]{1,2})\s+([\d]{1,2}:[\d]{1,2})?`),
-		regexp.MustCompile(`([\d]{4})年([\d]{1,2})月([\d]{1,2})日\s*([\d]{1,2}:[\d]{1,2})?`),
-		regexp.MustCompile(`([\d]{1,2})\s?天前`),
-		regexp.MustCompile(`([\d]{1,2})\s?小时前`),
+		regexp.MustCompile(`([\d]{4})\s*年\s*([\d]{1,2})\s*月\s*([\d]{1,2})\s*日\s*([\d]{1,2}:[\d]{1,2})?`),
+		regexp.MustCompile(`([\d]{1,2})\s*天前`),
+		regexp.MustCompile(`([\d]{1,2})\s*小时前`),
+		regexp.MustCompile(`([\d]{1,2})\s*分钟前`),
 	}
 )
 
@@ -60,42 +61,50 @@ func getTime(str string) int64 {
 	}
 	for i, t := range timeRegex {
 		ts := t.FindStringSubmatch(str)
-		if i == 5 {
+		switch i {
+		case 5:
 			if len(ts) == 2 {
 				d, _ := strconv.Atoi(ts[1])
 				t := time.Now().Add(-time.Hour*time.Duration(24*d) - 8*time.Hour)
 				return fn(t.Year(), int(t.Month()), t.Day(), 0, 0)
 			}
 			continue
-		}
-		if i == 6 {
+		case 6:
 			if len(ts) == 2 {
 				h, _ := strconv.Atoi(ts[1])
 				t := time.Now().Add(-time.Hour*time.Duration(h) - 8*time.Hour)
 				return fn(t.Year(), int(t.Month()), t.Day(), t.Hour(), 0)
 			}
 			continue
-		}
-		if len(ts) < 4 {
+
+		case 7:
+			if len(ts) == 2 {
+				h, _ := strconv.Atoi(ts[1])
+				t := time.Now().Add(-time.Minute*time.Duration(h) - 8*time.Hour)
+				return fn(t.Year(), int(t.Month()), t.Day(), t.Hour(), 0)
+			}
 			continue
-		}
-		var h string = "00:00"
-		if len(ts) > 4 && ts[4] != "" {
-			h = ts[4]
-		}
+		default:
+			if len(ts) < 4 {
+				continue
+			}
+			var h string = "00:00"
+			if len(ts) > 4 && ts[4] != "" {
+				h = ts[4]
+			}
 
-		year, _ := strconv.Atoi(ts[1])
-		month, _ := strconv.Atoi(ts[2])
-		day, _ := strconv.Atoi(ts[3])
+			year, _ := strconv.Atoi(ts[1])
+			month, _ := strconv.Atoi(ts[2])
+			day, _ := strconv.Atoi(ts[3])
 
-		timeAt := strings.Split(h, ":")
-		hour, _ := strconv.Atoi(timeAt[0])
-		var minute int
-		if len(timeAt) > 1 {
-			minute, _ = strconv.Atoi(timeAt[1])
+			timeAt := strings.Split(h, ":")
+			hour, _ := strconv.Atoi(timeAt[0])
+			var minute int
+			if len(timeAt) > 1 {
+				minute, _ = strconv.Atoi(timeAt[1])
+			}
+			return fn(year, month, day, hour, minute)
 		}
-		return fn(year, month, day, hour, minute)
-
 	}
 	return 0
 }
@@ -376,9 +385,10 @@ func walkRemove(n *html.Node, fn selector, del selector) {
 
 //remove node n when using ` c := node.FirstChild; c != nil; c = c.NextSibling` traves
 func travesRemove(n *html.Node) {
-	// println("removeing", n.Data, n.DataAtom)
 	next := n.NextSibling
-	n.Parent.RemoveChild(n)
+	if n.Parent != nil {
+		n.Parent.RemoveChild(n)
+	}
 	n.NextSibling = next
 }
 

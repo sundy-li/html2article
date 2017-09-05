@@ -273,8 +273,11 @@ func (ec *extractor) getBestMatch() (node *html.Node, err error) {
 
 func getPublishTime(node *html.Node) (ts int64) {
 	pnode := node.Parent
+	sel := func(n *html.Node) bool {
+		return n != node
+	}
 	for i := 0; i < 6 && pnode != nil; i++ {
-		h, _ := getHtml(pnode)
+		h := getText(pnode, sel)
 		ts = getTime(h)
 		if ts > 0 {
 			break
@@ -282,7 +285,7 @@ func getPublishTime(node *html.Node) (ts int64) {
 		pnode = pnode.Parent
 	}
 	if ts == 0 {
-		h, _ := getHtml(node)
+		h := getText(node)
 		ts = getTime(h)
 	}
 	return

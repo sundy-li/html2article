@@ -76,7 +76,6 @@ func TestDistance(t *testing.T) {
 		{"1", "abc", "ab", 1},
 		{"2", "abc", "abd", 1},
 		{"3", "ab", "abcef", 3},
-		{"3", "abcdfdsaffsdfsfsfdsfsfsfsfsfs3saafsfsafsfsafsfsfsafsfdsf", "abcdfdsaffsdfsfsfsfsfsf23232safsfsaf2fsafsfsfsafsfdsf11", 100},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
