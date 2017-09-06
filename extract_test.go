@@ -2,7 +2,6 @@ package html2article
 
 import (
 	"net/http"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -47,20 +46,17 @@ func TestToArticle(t *testing.T) {
 			ext, _ := NewFromUrl(testCase.Url)
 			article, err := ext.ToArticle()
 			if err != nil {
-				t.Fatal(err)
-				return
+				t.Error("error", err.Error())
+				continue
 			}
 			assert.Nil(err)
 
 			if attr(article.contentNode, "class") != testCase.ExpectClass {
 				t.Errorf("ToArticle %s error,got %v, want %v", testCase.Url, attr(article.contentNode, "class"), testCase.ExpectClass)
 			}
-
-			assert.Equal(attr(article.contentNode, "class"), testCase.ExpectClass)
-			assert.True(article.Publishtime > 1405732300)
-			assert.True(article.Publishtime < 1555732300)
-			assert.True(strings.Contains(article.Title, "雷锋网"))
-			assert.True(strings.Contains(article.Content, "雷锋网"))
+			if article.Publishtime < 1405732300 || article.Publishtime > 1555732300 {
+				t.Errorf("ToArticle %s error,got %v", testCase.Url, article.Publishtime)
+			}
 		}
 
 	})
@@ -80,8 +76,8 @@ func TestToArticle(t *testing.T) {
 			ext, _ := NewFromUrl(testCase.Url)
 			article, err := ext.ToArticle()
 			if err != nil {
-				t.Fatal(err)
-				return
+				t.Error("error", err.Error())
+				continue
 			}
 			assert.Nil(err)
 

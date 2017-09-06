@@ -172,38 +172,26 @@ func Compress(str string) string {
 }
 
 func text(n *html.Node, filter ...selector) string {
+	if isTag(atom.Style)(n) || isTag(atom.Script)(n) || isTag(atom.Image)(n) || isTag(atom.Img)(n) || isTag(atom.Textarea)(n) || isTag(atom.Input)(n) || isTag(atom.Noscript)(n) {
+		return ""
+	}
 	var buf bytes.Buffer
-	walk(n, func(n *html.Node) bool {
-		if n == nil {
-			return false
-		}
-		switch n.Type {
-		case html.TextNode:
-			buf.WriteString(n.Data)
-			return false
-		case html.ElementNode:
-			// no-op
-		default:
-			return true
-		}
-		if isTag(atom.Style)(n) || isTag(atom.Script)(n) || isTag(atom.Image)(n) || isTag(atom.Img)(n) || isTag(atom.Textarea)(n) || isTag(atom.Input)(n) || isTag(atom.Noscript)(n) {
-			return false
-		}
-		buf.WriteString(childText(n, filter...))
-		return false
-	})
-	return buf.String()
-}
 
-func childText(node *html.Node, filter ...selector) string {
-	var buf bytes.Buffer
-	for n := node.FirstChild; n != nil; n = n.NextSibling {
-		flag := true
-		for _, f := range filter {
-			flag = flag && f(node)
-		}
-		if flag {
-			fmt.Fprint(&buf, text(n, filter...))
+	switch n.Type {
+	case html.TextNode:
+		buf.WriteString(n.Data)
+	case html.ElementNode:
+		for c := n.FirstChild; c != nil; c = c.NextSibling {
+			ok := true
+			for _, f := range filter {
+				if !f(c) {
+					ok = false
+					break
+				}
+			}
+			if ok {
+				fmt.Fprint(&buf, text(c, filter...))
+			}
 		}
 	}
 	return buf.String()
@@ -299,6 +287,10 @@ func isNoisingNode(n *html.Node) bool {
 func isTitleNode(n *html.Node) bool {
 	switch n.DataAtom {
 	case atom.H1, atom.H2, atom.H3, atom.H4, atom.H5:
+		return true
+	}
+	cls := attr(n, "class")
+	if strings.Contains(cls, "title") {
 		return true
 	}
 	return false
@@ -422,20 +414,71 @@ func setAttr(n *html.Node, attrName, value string) {
 	})
 }
 
-func distance(a, b string) int {
-	return distanceSize(a, b, len(a), len(b))
+func diffString(a, b string) int {
+	aa := []rune(a)
+	bb := []rune(b)
+	return diffRune(aa, bb)
 }
 
-func distanceSize(a, b string, s1 int, s2 int) int {
+func diffRune(a, b []rune) int {
+	var tmp []rune
+	if len(a) < len(b) {
+		tmp = a
+		a = b
+		b = tmp
+	}
+	//a should be bigger
+	mp := make(map[rune]bool, len(a))
+	for _, r := range a {
+		mp[r] = true
+	}
+	var dis = 0
+	for _, r := range b {
+		if _, ok := mp[r]; !ok {
+			dis++
+		}
+	}
+	return dis
+}
+
+func distanceExit(a, b string, maxValue int) (dis int, ok bool) {
+	aa := []rune(a)
+	bb := []rune(b)
+	return distanceRuneExit(aa, bb, len(aa), len(bb), maxValue)
+}
+
+func distanceRuneExit(a, b []rune, s1 int, s2 int, maxValue int) (dis int, ok bool) {
+	if maxValue < 0 {
+		return
+	}
 	if s1 == 0 || s2 == 0 {
-		return max(s1, s2)
+		dis = max(s1, s2)
+		if dis > maxValue {
+			return
+		}
+		ok = true
+		return
 	}
 	if a[0] == b[0] {
-		return distanceSize(a[1:], b[1:], s1-1, s2-1)
+		return distanceRuneExit(a[1:], b[1:], s1-1, s2-1, maxValue)
 	}
-	return min(
-		min(distanceSize(a[1:], b[1:], s1-1, s2-1), distanceSize(a, b[1:], s1, s2-1)),
-		distanceSize(a[1:], b, s1-1, s2)) + 1
+	var v = (1 << 31) - 1
+
+	if vv, ok := distanceRuneExit(a[1:], b[1:], s1-1, s2-1, maxValue-1); ok && vv+1 < v {
+		v = vv + 1
+	}
+	if vv, ok := distanceRuneExit(a, b[1:], s1, s2-1, maxValue-1); ok && vv+1 < v {
+		v = vv + 1
+	}
+	if vv, ok := distanceRuneExit(a[1:], b, s1-1, s2, maxValue-1); ok && vv+1 < v {
+		v = vv + 1
+	}
+	if v == (1<<31)-1 {
+		return
+	}
+	dis = v
+	ok = true
+	return
 }
 func max(a, b int) int {
 	if a < b {

@@ -92,10 +92,10 @@ func (ec *extractor) ToArticle() (article *Article, err error) {
 	titleNode := find(ec.doc, isTag(atom.Title))
 	if titleNode != nil {
 		ec.title = getText(titleNode)
-		ec.titleDistanceMin = len(ec.title) / 2
+		ec.titleDistanceMin = countChar(ec.title) / 2
 	}
 
-	ec.getSn()
+	ec.getSn(body)
 	ec.getInfo(body)
 	node, err := ec.getBestMatch()
 	if err != nil {
@@ -127,8 +127,8 @@ func (ec *extractor) ToArticle() (article *Article, err error) {
 	return
 }
 
-func (ec *extractor) getSn() {
-	txt := text(ec.doc)
+func (ec *extractor) getSn(body *html.Node) {
+	txt := getText(body)
 	ec.swn = float64(countStopWords(txt))
 	ec.sn = float64(countSn(txt))
 }
@@ -143,12 +143,16 @@ func (ec *extractor) getInfo(node *html.Node) (info *Info) {
 		return
 	}
 	if node.Type == html.TextNode {
-		info.Data = node.Data
-		info.TextCount = countChar(info.Data)
-		info.LeafList = append(info.LeafList, info.TextCount)
+		if node.Parent != nil {
+			info.Data = node.Data
+			info.TextCount = countChar(info.Data)
+			info.LeafList = append(info.LeafList, info.TextCount)
+			info.TextCount = countChar(info.Data)
+			info.Density = float64(info.TextCount) / 0.1
 
-		if node.Parent != nil && isTitleNode(node.Parent) {
-			ec.filterTitle(node.Parent)
+			if isTitleNode(node.Parent) {
+				ec.filterTitle(node.Parent)
+			}
 		}
 		return
 	} else if node.Type == html.ElementNode {
@@ -166,6 +170,7 @@ func (ec *extractor) getInfo(node *html.Node) (info *Info) {
 			info.Pcount += cInfo.Pcount
 			info.ImageCount += cInfo.ImageCount
 			info.InputCount += cInfo.InputCount
+			info.DensitySum += cInfo.Density
 		}
 
 		info.TagCount++
@@ -183,6 +188,12 @@ func (ec *extractor) getInfo(node *html.Node) (info *Info) {
 		case atom.Input, atom.Textarea, atom.Button:
 			info.InputCount++
 		}
+		var pureLen = info.TextCount - info.LinkTextCount
+		var size = info.TagCount - info.LinkTagCount
+
+		if pureLen != 0 && size != 0 {
+			info.Density = float64(pureLen) / float64(size)
+		}
 		if isContentNode(node) {
 			ec.addNode(node, info)
 		}
@@ -195,31 +206,24 @@ func (ec *extractor) getInfo(node *html.Node) (info *Info) {
 
 //正文去掉title 编辑距离太近的节点,设置title
 func (ec *extractor) filterTitle(n *html.Node) {
-	txt := getText(n)
-	a := txt
-	if len(a) > len(ec.title)+3 {
-		return
-	}
-	if len(a) > len(ec.title) {
-		a = a[:len(ec.title)]
-	}
-	size := 0
-	if len(a) > 10 && len(ec.title) > 10 {
-		size = distance(a[:10], ec.title[:10])
-	} else {
-		size = distance(a, ec.title[:len(a)])
-	}
-	if size <= ec.titleDistanceMin && size < len(a)/2 {
-		travesRemove(n)
-		if ec.option.AccurateTitle {
-			ec.accurateTitle = txt
-			ec.titleDistanceMin = size
+	txt := getText(n, func(s *html.Node) bool { return s.Type == html.TextNode })
+	maxValue := countChar(ec.title) / 2
+	count := countChar(txt)
+
+	if count >= maxValue && count <= maxValue*2+1 {
+		size := diffString(txt, ec.title)
+		if size < maxValue {
+			travesRemove(n)
+			if ec.option.AccurateTitle && size < ec.titleDistanceMin {
+				ec.accurateTitle = txt
+				ec.titleDistanceMin = size
+			}
 		}
 	}
 }
 
 //正文去噪
-//去噪即删掉正文中文文本方差小于maxAvg * 0.3的非文本节点
+//去噪即删掉正文中文文本方差小于density * 0.3的非文本节点
 //只清洗前后三个节点
 func (ec *extractor) denoise(node *html.Node) {
 	avgm := ec.maxAvg * 0.3

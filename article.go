@@ -68,7 +68,7 @@ func (a *Article) Paragraphs() []string {
 	paras := []string{}
 	walk(a.contentNode, func(n *html.Node) bool {
 		if isTag(atom.P)(n) {
-			text := strings.TrimSpace(childText(n))
+			text := Compress(text(n))
 			if text != "" {
 				paras = append(paras, text)
 			}
