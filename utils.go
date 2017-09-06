@@ -290,7 +290,7 @@ func isTitleNode(n *html.Node) bool {
 		return true
 	}
 	cls := attr(n, "class")
-	if strings.Contains(cls, "title") {
+	if strings.Contains(cls, "title") || strings.Contains(cls, "article") || strings.Contains(cls, "news") {
 		return true
 	}
 	return false

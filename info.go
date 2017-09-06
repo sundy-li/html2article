@@ -35,16 +35,16 @@ func (info *Info) CalScore(sn_sum, swn_sum float64) {
 	info.avg = info.getAvg()
 	info.score = info.DensitySum * math.Log(info.avg) * math.Log10(float64(info.Pcount+2)) * (float64(sn)/sn_sum + 1) * (float64(swn)/swn_sum + 1)
 
-	// return
-	if info.score >= 0 {
-		c := attr(info.node, "class")
-		if c == "" {
-			c = attr(info.node, "id")
-		}
-		if true {
-			println("class:", c, info.score, info.DensitySum, math.Log(info.avg), math.Log10(float64(info.Pcount+30)), (float64(sn)/sn_sum + 1), (float64(swn)/swn_sum + 1), sn, sn_sum)
-		}
-	}
+	return
+	// if info.score >= 0 {
+	// 	c := attr(info.node, "class")
+	// 	if c == "" {
+	// 		c = attr(info.node, "id")
+	// 	}
+	// 	if true {
+	// 		println("class:", c, info.score, info.DensitySum, math.Log(info.avg), math.Log10(float64(info.Pcount+30)), (float64(sn)/sn_sum + 1), (float64(swn)/swn_sum + 1), sn, sn_sum)
+	// 	}
+	// }
 }
 
 func (info *Info) getAvg() float64 {

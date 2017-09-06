@@ -16,7 +16,7 @@ type extractor struct {
 	urlStr string
 	doc    *html.Node
 
-	maxAvg           float64
+	maxDensity       float64
 	sn               float64
 	swn              float64
 	title            string
@@ -231,14 +231,16 @@ func (ec *extractor) filterTitle(n *html.Node) {
 //去噪即删掉正文中文文本方差小于density * 0.3的非文本节点
 //只清洗前后三个节点
 func (ec *extractor) denoise(node *html.Node) {
-	avgm := ec.maxAvg * 0.3
+	avgm := ec.maxDensity * 0.3
 	var i = -1
 	for n := node.FirstChild; n != nil && i < 3; n = n.NextSibling {
+		if n.Type == html.TextNode {
+			continue
+		}
 		i++
 		if isNoisingNode(n) {
 			info := ec.getInfo(n)
-			info.avg = info.getAvg()
-			if info.avg < avgm {
+			if info.Density <= avgm {
 				travesRemove(n)
 				continue
 			}
@@ -247,6 +249,9 @@ func (ec *extractor) denoise(node *html.Node) {
 
 	i = -1
 	for n := node.LastChild; n != nil && i < 3; n = n.PrevSibling {
+		if n.Type == html.TextNode {
+			continue
+		}
 		i++
 		if isNoisingNode(n) {
 			info := ec.getInfo(n)
@@ -276,8 +281,8 @@ func (ec *extractor) getBestMatch() (node *html.Node, err error) {
 			maxScore = kinfo.score
 			node = v
 		}
-		if kinfo.avg > ec.maxAvg {
-			ec.maxAvg = kinfo.avg
+		if kinfo.Density > ec.maxDensity {
+			ec.maxDensity = kinfo.Density
 		}
 	}
 	if node == nil {
