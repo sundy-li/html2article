@@ -138,13 +138,13 @@ func (ec *extractor) getInfo(node *html.Node) (info *Info) {
 
 	//remove unused element
 	switch node.DataAtom {
-	case atom.Script, atom.Object, atom.Style, atom.Iframe:
+	case atom.Script, atom.Object, atom.Style, atom.Iframe, atom.Ins:
 		travesRemove(node)
 		return
 	}
 	if node.Type == html.TextNode {
 		if node.Parent != nil {
-			info.Data = node.Data
+			info.Data = getText(node)
 			info.TextCount = countChar(info.Data)
 			info.LeafList = append(info.LeafList, info.TextCount)
 			info.TextCount = countChar(info.Data)
@@ -171,6 +171,11 @@ func (ec *extractor) getInfo(node *html.Node) (info *Info) {
 			info.ImageCount += cInfo.ImageCount
 			info.InputCount += cInfo.InputCount
 			info.DensitySum += cInfo.Density
+
+			// cls := attr(node, "class")
+			// if cls == "main fl blkContainer" {
+			// 	println("adding", cInfo.Data, cInfo.Density)
+			// }
 		}
 
 		info.TagCount++
@@ -207,10 +212,10 @@ func (ec *extractor) getInfo(node *html.Node) (info *Info) {
 //正文去掉title 编辑距离太近的节点,设置title
 func (ec *extractor) filterTitle(n *html.Node) {
 	txt := getText(n, func(s *html.Node) bool { return s.Type == html.TextNode })
-	maxValue := countChar(ec.title) / 2
+	maxValue := countChar(ec.title) / 3
 	count := countChar(txt)
 
-	if count >= maxValue && count <= maxValue*2+1 {
+	if count >= maxValue && count <= maxValue*3+1 {
 		size := diffString(txt, ec.title)
 		if size < maxValue {
 			travesRemove(n)
