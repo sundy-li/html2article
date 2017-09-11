@@ -230,15 +230,19 @@ func getImages(node *html.Node) []string {
 				return false
 			}
 
-			atts := []string{"data-original","data-echo","data-src","src"}
+			atts := []string{"data-original","data-echo","data-src"}
 			src := ""
 			for _,a := range atts{
 				src = attr(n, a)
 				if len(src)>0{
+					setAttr(n, "src", src)
+					removeAttr(n, a)
 					break
 				}
 			}
-
+            if len(src)==0{
+				src = attr(n, "src")
+			}
 			excludeStrs := []string{
 				"w16_h16.png",
 				"logo.png",
