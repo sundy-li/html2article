@@ -235,7 +235,6 @@ func getImages(node *html.Node) []string {
 			for _,a := range atts{
 				src = attr(n, a)
 				if len(src)>0{
-					src = attr(n, a)
 					break
 				}
 			}
