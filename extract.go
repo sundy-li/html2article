@@ -22,6 +22,7 @@ type extractor struct {
 	title            string
 	accurateTitle    string
 	titleDistanceMin int
+	titleMatchLen    int
 
 	option *Option
 }
@@ -92,7 +93,14 @@ func (ec *extractor) ToArticle() (article *Article, err error) {
 	titleNode := find(ec.doc, isTag(atom.Title))
 	if titleNode != nil {
 		ec.title = getText(titleNode)
-		ec.titleDistanceMin = countChar(ec.title) / 2
+		ec.titleDistanceMin = 0
+		titles := strings.Split(ec.title, " ")
+		for _, t := range titles {
+			if l := countChar(t); l > ec.titleDistanceMin {
+				ec.titleDistanceMin = l
+				ec.titleMatchLen = l
+			}
+		}
 	}
 
 	ec.getSn(body)
@@ -188,6 +196,8 @@ func (ec *extractor) getInfo(node *html.Node) (info *Info) {
 			}
 		case atom.P:
 			info.Pcount++
+		case atom.H1, atom.H2, atom.H3, atom.H4, atom.H5, atom.H6:
+			ec.filterTitle(node)
 		case atom.Img, atom.Image:
 			info.ImageCount++
 		case atom.Input, atom.Textarea, atom.Button:
@@ -211,11 +221,27 @@ func (ec *extractor) getInfo(node *html.Node) (info *Info) {
 
 //正文去掉title 编辑距离太近的节点,设置title
 func (ec *extractor) filterTitle(n *html.Node) {
+	if ec.titleDistanceMin == 0 {
+		return
+	}
+	if isHNode(n) {
+		cls := attr(n, "class")
+		if strings.Contains(cls, "title") {
+			travesRemove(n)
+			ec.accurateTitle = getText(n)
+			ec.titleDistanceMin = 0
+			return
+		}
+	}
 	txt := getText(n, func(s *html.Node) bool { return s.Type == html.TextNode })
-	maxValue := countChar(ec.title) / 3
+	maxValue := ec.titleMatchLen / 3
 	count := countChar(txt)
-
-	if count >= maxValue && count <= maxValue*3+1 {
+	if count >= maxValue && count <= maxValue*3+2 {
+		if strings.Contains(ec.title, txt) {
+			travesRemove(n)
+			ec.accurateTitle = txt
+			ec.titleDistanceMin = 0
+		}
 		size := diffString(txt, ec.title)
 		if size < maxValue {
 			travesRemove(n)

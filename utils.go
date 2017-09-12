@@ -286,11 +286,18 @@ func isNoisingNode(n *html.Node) bool {
 
 func isTitleNode(n *html.Node) bool {
 	switch n.DataAtom {
-	case atom.H1, atom.H2, atom.H3, atom.H4, atom.H5:
+	case atom.H1, atom.H2, atom.H3, atom.H4, atom.H5, atom.H6:
+		return true
+	case atom.A, atom.Span, atom.Td, atom.Tr, atom.Div, atom.Header:
 		return true
 	}
-	cls := attr(n, "class")
-	if strings.Contains(cls, "title") || strings.Contains(cls, "article") || strings.Contains(cls, "news") {
+
+	return false
+}
+
+func isHNode(n *html.Node) bool {
+	switch n.DataAtom {
+	case atom.H1, atom.H2, atom.H3, atom.H4, atom.H5, atom.H6:
 		return true
 	}
 	return false
