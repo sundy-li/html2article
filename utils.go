@@ -125,10 +125,11 @@ func CompressHtml(str string) string {
 	flag := false  // 标识当前是否已经有一个空格
 	inTag := false // 标识是否在tag里头
 
-	for _, r := range str {
+	rs := ([]rune)(str)
+	for i, r := range rs {
 		if r == '<' {
 			inTag = true
-		} else if inTag && r == '/' {
+		} else if (inTag && r == '/') && (i-1 >= 0 && rs[i-1] == '<') {
 			inTag = false
 		}
 		if !inTag {
