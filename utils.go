@@ -439,13 +439,13 @@ func diffRune(a, b []rune) int {
 	for _, r := range a {
 		mp[r] = true
 	}
-	var dis = 0
+	var matched = 0
 	for _, r := range b {
-		if _, ok := mp[r]; !ok {
-			dis++
+		if _, ok := mp[r]; ok {
+			matched++
 		}
 	}
-	return dis
+	return len(a) - matched
 }
 
 func distanceExit(a, b string, maxValue int) (dis int, ok bool) {

@@ -93,14 +93,8 @@ func (ec *extractor) ToArticle() (article *Article, err error) {
 	titleNode := find(ec.doc, isTag(atom.Title))
 	if titleNode != nil {
 		ec.title = getText(titleNode)
-		ec.titleDistanceMin = 0
-		titles := strings.Split(ec.title, " ")
-		for _, t := range titles {
-			if l := countChar(t); l > ec.titleDistanceMin {
-				ec.titleDistanceMin = l
-				ec.titleMatchLen = l
-			}
-		}
+		ec.titleDistanceMin = countChar(ec.title)
+		ec.titleMatchLen = ec.titleDistanceMin
 	}
 
 	ec.getSn(body)
@@ -236,12 +230,8 @@ func (ec *extractor) filterTitle(n *html.Node) {
 	txt := getText(n, func(s *html.Node) bool { return s.Type == html.TextNode })
 	maxValue := ec.titleMatchLen / 3
 	count := countChar(txt)
+	// println("lll", count, maxValue, txt, ec.title)
 	if count >= maxValue && count <= maxValue*3+2 {
-		if strings.Contains(ec.title, txt) {
-			travesRemove(n)
-			ec.accurateTitle = txt
-			ec.titleDistanceMin = 0
-		}
 		size := diffString(txt, ec.title)
 		if size < maxValue {
 			travesRemove(n)

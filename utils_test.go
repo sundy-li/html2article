@@ -109,9 +109,9 @@ func TestDiffstr(t *testing.T) {
 
 		want int
 	}{
-		{"1", "abc", "ab", 0},
+		{"1", "abc", "ab", 1},
 		{"2", "abc", "abd", 1},
-		{"3", "ab", "abcef", 0},
+		{"3", "ab", "abcef", 3},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
