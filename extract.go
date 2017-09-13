@@ -221,19 +221,22 @@ func (ec *extractor) filterTitle(n *html.Node) {
 	if isHNode(n) {
 		cls := attr(n, "class")
 		if strings.Contains(cls, "title") {
-			travesRemove(n)
-			ec.accurateTitle = getText(n)
-			ec.titleDistanceMin = 0
-			return
+			txt := getText(n)
+			size := diffString(txt, ec.title)
+			if ec.option.AccurateTitle && size < ec.titleDistanceMin {
+				travesRemove(n)
+				ec.accurateTitle = txt
+				ec.titleDistanceMin = size
+			}
 		}
 	}
 	txt := getText(n, func(s *html.Node) bool { return s.Type == html.TextNode })
 	maxValue := ec.titleMatchLen / 3
 	count := countChar(txt)
-	// println("lll", count, maxValue, txt, ec.title)
+	// println("lll", count, maxValue, txt, ec.title, diffString(txt, ec.title), ec.titleDistanceMin)
 	if count >= maxValue && count <= maxValue*3+2 {
 		size := diffString(txt, ec.title)
-		if size < maxValue {
+		if size < maxValue*2 {
 			travesRemove(n)
 			if ec.option.AccurateTitle && size < ec.titleDistanceMin {
 				ec.accurateTitle = txt
