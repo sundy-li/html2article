@@ -131,9 +131,9 @@ func TestGetTime(t *testing.T) {
 		a    string
 		want int64
 	}{
-		{"1", "fdaf5小时前 ggagg", time.Now().Add(-5*time.Hour).Unix() / 3600 * 3600},
-		{"2", "hgha3天前fdsa", (time.Now().Add(-3 * time.Hour * 24).Unix()) / int64(24*3600) * int64(24*3600)},
-		{"3", "2017-02-14 07:48", 1487030400},
+		{"1", "fdaf5小时前 ggagg", time.Now().Add(-(5-8)*time.Hour).Unix() / 3600 * 3600},
+		{"2", "hgha3天前fdsa", (time.Now().Add(-3*time.Hour*24 + time.Hour*8).Unix()) / int64(24*3600) * int64(24*3600)},
+		{"3", "2017-02-14 05:48", 1487051280},
 	}
 
 	for _, tt := range tests {

@@ -19,8 +19,8 @@ type Style string
 
 var (
 	timeRegex = []*regexp.Regexp{
-		regexp.MustCompile(`([\d]{4})-([\d]{1,2})-([\d]{1,2})`),
 		regexp.MustCompile(`([\d]{4})-([\d]{1,2})-([\d]{1,2})\s+([\d]{1,2}:[\d]{1,2})?`),
+		regexp.MustCompile(`([\d]{4})-([\d]{1,2})-([\d]{1,2})`),
 		regexp.MustCompile(`([\d]{4})\.([\d]{1,2})\.([\d]{1,2})\s+([\d]{1,2}:[\d]{1,2})?`),
 		regexp.MustCompile(`([\d]{4})/([\d]{1,2})/([\d]{1,2})\s+([\d]{1,2}:[\d]{1,2})?`),
 		regexp.MustCompile(`([\d]{4})\s*年\s*([\d]{1,2})\s*月\s*([\d]{1,2})\s*日\s*([\d]{1,2}:[\d]{1,2})?`),
@@ -54,6 +54,7 @@ func countChar(str string) int {
 	return len([]rune(Compress(str)))
 }
 
+//如果str是北京时间，返回的时间戳会比当前快8小时
 func getTime(str string) int64 {
 	fn := func(year int, month int, day int, hour int, minute int) int64 {
 		v := fmt.Sprintf("%04d%02d%02d %02d:%02d", year, month, day, hour, minute)
@@ -69,14 +70,14 @@ func getTime(str string) int64 {
 		case 5:
 			if len(ts) == 2 {
 				d, _ := strconv.Atoi(ts[1])
-				t := time.Now().Add(-time.Hour*time.Duration(24*d) - 8*time.Hour)
+				t := time.Now().Add(-time.Hour * time.Duration(24*d))
 				return fn(t.Year(), int(t.Month()), t.Day(), 0, 0)
 			}
 			continue
 		case 6:
 			if len(ts) == 2 {
 				h, _ := strconv.Atoi(ts[1])
-				t := time.Now().Add(-time.Hour*time.Duration(h) - 8*time.Hour)
+				t := time.Now().Add(-time.Hour * time.Duration(h))
 				return fn(t.Year(), int(t.Month()), t.Day(), t.Hour(), 0)
 			}
 			continue
@@ -84,7 +85,7 @@ func getTime(str string) int64 {
 		case 7:
 			if len(ts) == 2 {
 				h, _ := strconv.Atoi(ts[1])
-				t := time.Now().Add(-time.Minute*time.Duration(h) - 8*time.Hour)
+				t := time.Now().Add(-time.Minute * time.Duration(h))
 				return fn(t.Year(), int(t.Month()), t.Day(), t.Hour(), 0)
 			}
 			continue
