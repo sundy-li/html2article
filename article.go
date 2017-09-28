@@ -52,11 +52,7 @@ func (a *Article) ParseImage(urlStr string) {
 			} else if strings.Index(a.Images[i], "/") == 0 {
 				newImg = _url.Scheme + "://" + _url.Host + a.Images[i]
 			} else {
-				p := _url.Path
-				if p == "" {
-					p = "/"
-				}
-				newImg = _url.Scheme + "://" + _url.Host + path.Join(p, "../", a.Images[i])
+				newImg = _url.Scheme + "://" + _url.Host + path.Join(path.Dir(_url.RequestURI()), a.Images[i])
 			}
 			mp[a.Images[i]] = newImg
 			a.Images[i] = newImg
