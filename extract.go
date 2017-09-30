@@ -220,7 +220,9 @@ func (ec *extractor) filterTitle(n *html.Node) {
 	}
 	if isHNode(n) {
 		txt := getText(n)
-		size := diffString(txt, ec.title) / 2
+		size := diffString(txt, ec.title)
+		size = size - size/3
+		// println("count2=>", size, txt, "title=>", ec.title)
 		if ec.option.AccurateTitle && size < ec.titleDistanceMin {
 			travesRemove(n)
 			ec.accurateTitle = txt
@@ -233,6 +235,7 @@ func (ec *extractor) filterTitle(n *html.Node) {
 	count := countChar(txt)
 	if count >= maxValue && count <= maxValue*3+2 {
 		size := diffString(txt, ec.title)
+		// println("count=>", count, maxValue, "size=>", size, txt, "title=>", ec.title)
 		if n.Parent != nil {
 			if isHNode(n.Parent) {
 				size /= 2

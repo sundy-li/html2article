@@ -438,16 +438,20 @@ func diffRune(a, b []rune) int {
 	}
 	//a should be bigger
 	mp := make(map[rune]bool, len(a))
+	mpb := make(map[rune]bool, len(b))
 	for _, r := range a {
 		mp[r] = true
 	}
-	var matched = 0
 	for _, r := range b {
-		if _, ok := mp[r]; ok {
-			matched++
+		mpb[r] = true
+	}
+	for k, _ := range mpb {
+		if _, ok := mp[k]; ok {
+			delete(mp, k)
+			delete(mpb, k)
 		}
 	}
-	return len(a) - matched
+	return len(mpb) + len(mp)
 }
 
 func distanceExit(a, b string, maxValue int) (dis int, ok bool) {
