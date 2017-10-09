@@ -119,6 +119,7 @@ func getText(n *html.Node, filter ...selector) string {
 	return Compress(strings.TrimSpace(text(n, filter...)))
 }
 
+//这个暂时不用,因为code标签还不好识别
 func CompressHtml(str string) string {
 	buf := make([]byte, 0, len(str)/2)
 	buffer := bytes.NewBuffer(buf)

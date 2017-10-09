@@ -34,7 +34,7 @@ func (a *Article) ParseReadContent() {
 		return n.Type == html.CommentNode || n.DataAtom == atom.Script || n.DataAtom == atom.Object
 	})
 	a.ReadContent, _ = getHtml(a.contentNode)
-	a.ReadContent = CompressHtml(a.ReadContent)
+	// a.ReadContent = CompressHtml(a.ReadContent)
 }
 
 // ParseImage parse the image src to the absolute path
