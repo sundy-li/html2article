@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"strings"
 
+	"fmt"
+
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
 )
@@ -97,7 +99,6 @@ func (ec *extractor) ToArticle() (article *Article, err error) {
 		ec.titleDistanceMin = countChar(ec.title)
 		ec.titleMatchLen = ec.titleDistanceMin
 	}
-
 	ec.getSn(body)
 	ec.getInfo(body)
 	node, err := ec.getBestMatch()
@@ -136,19 +137,22 @@ func (ec *extractor) tailNode(node *html.Node) {
 	var densities []float64
 	num := 0
 	//第一遍遍历子节点，计算出子节点个数以及保存其密度
+	sum := 0.0
 	for c := node.FirstChild; c != nil; c = c.NextSibling {
 		num++
 		d := ec.getInfo(c).Density
 		densities = append(densities, d)
+		sum += d
 	}
 	//如果子节点很少就返回，这里存疑
 	if num < 20 {
 		return
 	}
-	//将文本密度>50的保存起来
+	avg := sum / float64(num)
+	fmt.Println(avg)
 	articleIndex := make([]int, 0, 100)
 	for j := 0; j < len(densities); j++ {
-		if densities[j] > 50 {
+		if densities[j] > avg {
 			articleIndex = append(articleIndex, j)
 		}
 	}
@@ -166,10 +170,13 @@ func (ec *extractor) tailNode(node *html.Node) {
 	}
 	//得出哪些节点需要remove掉
 	rmIndex := make(map[int]bool)
+	mins := math.MaxFloat64
 	for j := 0; j < len(densities); j++ {
-		s := math.Pow(1/(fn(j)+0.1), 2) * (densities[j] + 1) //计算节点的分值，分值对到文章簇的距离以及自身的密度敏感
-		//阈值为0.1
-		if s < 0.1 {
+		s := math.Pow(1/(fn(j)+0.1), 2) * ((densities[j] + 1) / avg) //计算节点的分值，分值对到文章簇的距离以及自身的密度敏感
+		if fn(j) < 4 && s < mins {
+			mins = s
+		}
+		if s < mins {
 			rmIndex[j] = true
 		}
 	}
