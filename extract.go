@@ -8,8 +8,6 @@ import (
 	"net/http"
 	"strings"
 
-	"fmt"
-
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
 )
@@ -144,12 +142,8 @@ func (ec *extractor) tailNode(node *html.Node) {
 		densities = append(densities, d)
 		sum += d
 	}
-	//如果子节点很少就返回，这里存疑
-	if num < 20 {
-		return
-	}
+	//文本密度均值
 	avg := sum / float64(num)
-	fmt.Println(avg)
 	articleIndex := make([]int, 0, 100)
 	for j := 0; j < len(densities); j++ {
 		if densities[j] > avg {
@@ -173,7 +167,7 @@ func (ec *extractor) tailNode(node *html.Node) {
 	mins := math.MaxFloat64
 	for j := 0; j < len(densities); j++ {
 		s := math.Pow(1/(fn(j)+0.1), 2) * ((densities[j] + 1) / avg) //计算节点的分值，分值对到文章簇的距离以及自身的密度敏感
-		if fn(j) < 4 && s < mins {
+		if fn(j) < 5 && s < mins {
 			mins = s
 		}
 		if s < mins {
