@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io"
 	"io/ioutil"
+	"math"
 	"net/http"
 	"strings"
 
@@ -100,6 +101,8 @@ func (ec *extractor) ToArticle() (article *Article, err error) {
 	ec.getSn(body)
 	ec.getInfo(body)
 	node, err := ec.getBestMatch()
+	ec.tailNode(node)
+
 	if err != nil {
 		return
 	}
@@ -127,6 +130,61 @@ func (ec *extractor) ToArticle() (article *Article, err error) {
 	}
 	article.Images = getImages(node)
 	return
+}
+
+func (ec *extractor) tailNode(node *html.Node) {
+	var densities []float64
+	num := 0
+	//第一遍遍历子节点，计算出子节点个数以及保存其密度
+	for c := node.FirstChild; c != nil; c = c.NextSibling {
+		num++
+		d := ec.getInfo(c).Density
+		densities = append(densities, d)
+	}
+	//如果子节点很少就返回，这里存疑
+	if num < 20 {
+		return
+	}
+	//将文本密度>50的保存起来
+	articleIndex := make([]int, 0, 100)
+	for j := 0; j < len(densities); j++ {
+		if densities[j] > 50 {
+			articleIndex = append(articleIndex, j)
+		}
+	}
+	//计算节点到文章簇距离的函数，就是计算机最小的索引差
+	//
+	fn := func(i int) float64 {
+		min := math.MaxFloat64
+		for _, index := range articleIndex {
+			m := math.Abs(float64(index - i))
+			if m < min {
+				min = m
+			}
+		}
+		return min
+	}
+	//得出哪些节点需要remove掉
+	rmIndex := make(map[int]bool)
+	for j := 0; j < len(densities); j++ {
+		s := math.Pow(1/(fn(j)+0.1), 2) * (densities[j] + 1) //计算节点的分值，分值对到文章簇的距离以及自身的密度敏感
+		//阈值为0.1
+		if s < 0.1 {
+			rmIndex[j] = true
+		}
+	}
+	num = 0
+	rmNode := make([]*html.Node, 0, 100)
+	for c := node.FirstChild; c != nil; c = c.NextSibling {
+		if rmIndex[num] == true {
+			rmNode = append(rmNode, c)
+		}
+		num++
+	}
+
+	for _, n := range rmNode {
+		node.RemoveChild(n)
+	}
 }
 
 func (ec *extractor) getSn(body *html.Node) {
