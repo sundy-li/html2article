@@ -100,8 +100,6 @@ func (ec *extractor) ToArticle() (article *Article, err error) {
 	ec.getSn(body)
 	ec.getInfo(body)
 	node, err := ec.getBestMatch()
-	ec.tailNode(node)
-
 	if err != nil {
 		return
 	}
@@ -109,6 +107,7 @@ func (ec *extractor) ToArticle() (article *Article, err error) {
 		err = ERROR_NOTFOUND
 		return
 	}
+	ec.tailNode(node)
 	article = &Article{}
 	article.Publishtime = getPublishTime(node)
 	if ec.option.RemoveNoise {
