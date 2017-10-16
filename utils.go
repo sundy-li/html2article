@@ -398,6 +398,19 @@ func travesRemove(n *html.Node) {
 	n.NextSibling = next
 }
 
+//remove br node
+func brRemove(n *html.Node) {
+	next := n.NextSibling
+	if n.Parent != nil {
+		if n.Parent.NextSibling != nil && n.Parent.Type == html.TextNode && n.Parent.NextSibling.Type == html.TextNode {
+			n.Parent.Data += fmt.Sprintf("<%s>", n.Data)
+			n.Parent.Data += n.Parent.NextSibling.Data
+			travesRemove(n.Parent.NextSibling)
+		}
+	}
+	n.NextSibling = next
+}
+
 func removeAttr(n *html.Node, attrName string) {
 	for i, a := range n.Attr {
 		if a.Key == attrName {

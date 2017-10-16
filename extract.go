@@ -201,6 +201,13 @@ func (ec *extractor) getInfo(node *html.Node) (info *Info) {
 	case atom.Script, atom.Object, atom.Style, atom.Iframe, atom.Ins:
 		travesRemove(node)
 		return
+	case atom.Br:
+		brRemove(node)
+		return
+	}
+	if display := attr(node, "style"); len(display) > 0 && strings.Contains(display, "display: none") {
+		travesRemove(node)
+		return
 	}
 	if node.Type == html.TextNode {
 		if node.Parent != nil {
