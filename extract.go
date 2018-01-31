@@ -10,6 +10,7 @@ import (
 
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
+	"golang.org/x/net/html/charset"
 )
 
 type extractor struct {
@@ -62,11 +63,14 @@ func NewFromUrl(urlStr string) (ext *extractor, err error) {
 	if err != nil {
 		return
 	}
+	//@see : https://github.com/golang/net/blob/master/html/charset/charset.go
+	reader, err := charset.NewReader(resp.Body, strings.ToLower(resp.Header.Get("Content-Type")))
 	defer resp.Body.Close()
-	bs, _ := ioutil.ReadAll(resp.Body)
-	htmlStr := string(bs)
-	htmlStr = DecodeHtml(resp.Header, htmlStr, htmlStr)
-	ext, err = NewFromHtml(htmlStr)
+	bs, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return
+	}
+	ext, err = NewFromHtml(string(bs))
 	if err != nil {
 		return
 	}
